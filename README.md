@@ -4,20 +4,14 @@ A deep learning framework for climate data spatial downscaling based on Transfor
 1、Overview
 This project implements spatial downscaling of climate data from low resolution (16×16) to high resolution (64×64), with a scale factor of 4x. The framework is built upon [BasicSR](https://github.com/XPixelGroup/BasicSR) and supports various deep learning architectures for fine-grained prediction of climate variables.
 
- Model | Description | Config File |
-
+| Model | Description | Config File |
+|-------|-------------|-------------|
 | **SwinIR + VMamba + HGT** | Hybrid SwinIR and VMamba architecture with topographic information | `SwinIR_VMamba_hgt.yml` |
-
 | **SwinIR + VMamba** | Hybrid SwinIR and VMamba architecture | `SwinIR_VMamba.yml` |
-
 | **SwinIR + HGT** | Swin Transformer-based architecture with topographic fusion | `SwinIR_climate_baseline_hgt.yml` |
-
 | **SwinIR** | Swin Transformer-based image restoration architecture | `SwinIR_climate_baseline.yml` |
-
 | **Uformer** | Transformer-based U-Net architecture | `Uformer_climate_baseline.yml` |
-
 | **UNet** | Classic U-Net convolutional neural network | `UNet_climate_baseline.yml` |
-
 | **SRCNN** | Simple super-resolution CNN | `SRCNN_climate_baseline.yml` |
 
 2、Directory Structure

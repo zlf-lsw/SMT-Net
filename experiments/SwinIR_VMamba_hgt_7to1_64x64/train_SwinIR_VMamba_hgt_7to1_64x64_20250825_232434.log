@@ -1,0 +1,1098 @@
+2025-08-25 23:24:34,195 INFO: 
+                ____                _       _____  ____
+               / __ ) ____ _ _____ (_)_____/ ___/ / __ \
+              / __  |/ __ `// ___// // ___/\__ \ / /_/ /
+             / /_/ // /_/ /(__  )/ // /__ ___/ // _, _/
+            /_____/ \__,_//____//_/ \___//____//_/ |_|
+     ______                   __   __                 __      __
+    / ____/____   ____   ____/ /  / /   __  __ _____ / /__   / /
+   / / __ / __ \ / __ \ / __  /  / /   / / / // ___// //_/  / /
+  / /_/ // /_/ // /_/ // /_/ /  / /___/ /_/ // /__ / /<    /_/
+  \____/ \____/ \____/ \____/  /_____/\____/ \___//_/|_|  (_)
+    
+Version Information: 
+	BasicSR: 1.4.2
+	PyTorch: 1.12.1+cu116
+	TorchVision: 0.13.1+cu116
+2025-08-25 23:24:34,196 INFO: 
+  name: SwinIR_VMamba_hgt_7to1_64x64
+  model_type: SimpleClimateModel
+  scale: 4
+  num_gpu: 2
+  manual_seed: 0
+  fp16: True
+  auto_resume: False
+  datasets:[
+    train:[
+      name: climate_train
+      type: ClimateDatasetWithTopo
+      phase: train
+      dataroot_gt: /home/lyb/diffusion/main2 copy/dataset
+      normalize: True
+      input_channels: 3
+      input_channel_indices: [0, 1, 2]
+      use_topo: False
+      use_shuffle: True
+      num_worker_per_gpu: 4
+      batch_size_per_gpu: 20
+      prefetch_mode: None
+      pin_memory: True
+      persistent_workers: False
+      scale: 4
+    ]
+    val:[
+      name: climate_val
+      type: ClimateDatasetWithTopo
+      phase: val
+      dataroot_gt: /home/lyb/diffusion/main2 copy/dataset
+      normalize: True
+      input_channels: 3
+      input_channel_indices: [0, 1, 2]
+      use_topo: False
+      num_worker_per_gpu: 4
+      prefetch_mode: None
+      pin_memory: True
+      persistent_workers: False
+      scale: 4
+    ]
+  ]
+  network_g:[
+    type: SwinIRVMambaClimate
+    add_hgt: True
+    hgt_alpha_init: 0.01
+    img_size: 16
+    patch_size: 1
+    in_chans: 3
+    num_out_ch: 1
+    embed_dim: 96
+    depths: [6, 6, 6, 6]
+    num_heads: [6, 6, 6, 6]
+    window_size: [4, 4, 4, 4]
+    mlp_ratio: 4
+    qkv_bias: True
+    drop_rate: 0.0
+    attn_drop_rate: 0.0
+    drop_path_rate: 0.05
+    patch_norm: True
+    use_checkpoint: False
+    upscale: 4
+    img_range: 1.0
+    upsampler: pixelshuffle
+    resi_connection: 1conv
+    activation: none
+    vmamba_depth: 2
+    vmamba_d_state: 16
+    vmamba_expand: 2
+    vmamba_drop_path: 0.05
+    vmamba_directions: 4
+  ]
+  path:[
+    pretrain_network_g: None
+    strict_load_g: True
+    resume_state: None
+    experiments_root: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/experiments/SwinIR_VMamba_hgt_7to1_64x64
+    models: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/experiments/SwinIR_VMamba_hgt_7to1_64x64/models
+    training_states: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/experiments/SwinIR_VMamba_hgt_7to1_64x64/training_states
+    log: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/experiments/SwinIR_VMamba_hgt_7to1_64x64
+    visualization: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/experiments/SwinIR_VMamba_hgt_7to1_64x64/visualization
+  ]
+  train:[
+    find_unused_parameters: True
+    optim_g:[
+      type: Adam
+      lr: 0.0002
+      betas: [0.9, 0.99]
+      weight_decay: 1e-06
+    ]
+    scheduler:[
+      type: MultiStepLR
+      milestones: [5000, 10000, 15000, 20000]
+      gamma: 0.8
+    ]
+    total_iter: 73060
+    warmup_iter: 5000
+    pixel_opt:[
+      type: CharbonnierLoss
+      loss_weight: 1.0
+      reduction: mean
+      eps: 0.001
+    ]
+  ]
+  val:[
+    val_freq: 20000
+    save_img: False
+    pbar: True
+    metrics:[
+      psnr:[
+        type: calculate_psnr
+        crop_border: 0
+        test_y_channel: False
+        better: higher
+      ]
+      ssim:[
+        type: calculate_ssim
+        crop_border: 0
+        test_y_channel: False
+        better: higher
+      ]
+      mae:[
+        type: calculate_climate_mae
+        crop_border: 0
+        better: lower
+      ]
+      mse:[
+        type: calculate_climate_mse
+        crop_border: 0
+        better: lower
+      ]
+      acc:[
+        type: calculate_climate_acc_tiles
+        crop_border: 0
+        better: higher
+      ]
+      psd:[
+        type: calculate_climate_psd_log
+        crop_border: 0
+        better: lower
+      ]
+    ]
+  ]
+  logger:[
+    print_freq: 2000
+    save_checkpoint_freq: 20000
+    use_tb_logger: False
+  ]
+  dist_params:[
+    backend: nccl
+    port: 29502
+  ]
+  dist: True
+  rank: 0
+  world_size: 2
+  is_train: True
+  root_path: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main
+
+2025-08-25 23:24:34,196 INFO: Loading dataset: /home/lyb/diffusion/main2 copy/dataset/dict_s2s_train.pt
+2025-08-25 23:24:53,271 INFO: Unified LR shape [N,C,H,W]: (87672, 3, 16, 16)
+2025-08-25 23:24:53,272 INFO: Unified HR shape [N,1,H,W]: (87672, 1, 64, 64)
+2025-08-25 23:25:03,574 INFO: LR mean: tensor([-0.3224, -0.0165,  0.7150])
+2025-08-25 23:25:03,575 INFO: LR std: tensor([1.1106, 0.9532, 0.3245])
+2025-08-25 23:25:03,575 INFO: HR mean: -0.3548726439476013
+2025-08-25 23:25:03,575 INFO: HR std: 1.097210168838501
+2025-08-25 23:25:05,190 INFO: Dataset [ClimateDatasetWithTopo] - climate_train is built.
+2025-08-25 23:25:05,191 INFO: Training statistics:
+	Number of train images: 87672
+	Dataset enlarge ratio: 1
+	Batch size per gpu: 20
+	World size (gpu number): 2
+	Require iter number per epoch: 2192
+	Total epochs: 34; iters: 73060.
+2025-08-25 23:25:05,191 INFO: Loading dataset: /home/lyb/diffusion/main2 copy/dataset/dict_s2s_val.pt
+2025-08-25 23:25:07,262 INFO: Unified LR shape [N,C,H,W]: (8760, 3, 16, 16)
+2025-08-25 23:25:07,262 INFO: Unified HR shape [N,1,H,W]: (8760, 1, 64, 64)
+2025-08-25 23:25:08,147 INFO: LR mean: tensor([-0.3108, -0.0110,  0.7089])
+2025-08-25 23:25:08,148 INFO: LR std: tensor([1.1441, 0.9277, 0.3185])
+2025-08-25 23:25:08,148 INFO: HR mean: -0.34806135296821594
+2025-08-25 23:25:08,149 INFO: HR std: 1.1247708797454834
+2025-08-25 23:25:08,318 INFO: Dataset [ClimateDatasetWithTopo] - climate_val is built.
+2025-08-25 23:25:08,319 INFO: Number of val images/folders in climate_val: 8760
+2025-08-25 23:25:08,590 INFO: Network [SwinIRVMambaClimate] is created.
+2025-08-25 23:25:14,823 INFO: Network: DistributedDataParallel - SwinIRVMambaClimate, with parameters: 5,749,698
+2025-08-25 23:25:14,823 INFO: SwinIRVMambaClimate(
+  (conv_first): Conv2d(3, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (patch_embed): PatchEmbed(
+    (norm): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+  )
+  (patch_unembed): PatchUnEmbed()
+  (pos_drop): Dropout(p=0.0, inplace=False)
+  (layers): ModuleList(
+    (0): RSTB(
+      (residual_group): BasicLayer(
+        dim=96, input_resolution=(16, 16), depth=6
+        (blocks): ModuleList(
+          (0): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): Identity()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (1): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (2): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (3): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (4): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (5): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+        )
+      )
+      (conv): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (patch_embed): PatchEmbed()
+      (patch_unembed): PatchUnEmbed()
+    )
+    (1): RSTB(
+      (residual_group): BasicLayer(
+        dim=96, input_resolution=(16, 16), depth=6
+        (blocks): ModuleList(
+          (0): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (1): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (2): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (3): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (4): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (5): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+        )
+      )
+      (conv): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (patch_embed): PatchEmbed()
+      (patch_unembed): PatchUnEmbed()
+    )
+    (2): RSTB(
+      (residual_group): BasicLayer(
+        dim=96, input_resolution=(16, 16), depth=6
+        (blocks): ModuleList(
+          (0): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (1): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (2): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (3): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (4): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (5): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+        )
+      )
+      (conv): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (patch_embed): PatchEmbed()
+      (patch_unembed): PatchUnEmbed()
+    )
+    (3): RSTB(
+      (residual_group): BasicLayer(
+        dim=96, input_resolution=(16, 16), depth=6
+        (blocks): ModuleList(
+          (0): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (1): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (2): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (3): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (4): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=0, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+          (5): SwinTransformerBlock(
+            dim=96, input_resolution=(16, 16), num_heads=6, window_size=4, shift_size=2, mlp_ratio=4
+            (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (attn): WindowAttention(
+              dim=96, window_size=(4, 4), num_heads=6
+              (qkv): Linear(in_features=96, out_features=288, bias=True)
+              (attn_drop): Dropout(p=0.0, inplace=False)
+              (proj): Linear(in_features=96, out_features=96, bias=True)
+              (proj_drop): Dropout(p=0.0, inplace=False)
+              (softmax): Softmax(dim=-1)
+            )
+            (drop_path): DropPath()
+            (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+            (mlp): Mlp(
+              (fc1): Linear(in_features=96, out_features=384, bias=True)
+              (act): GELU(approximate=none)
+              (fc2): Linear(in_features=384, out_features=96, bias=True)
+              (drop): Dropout(p=0.0, inplace=False)
+            )
+          )
+        )
+      )
+      (conv): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (patch_embed): PatchEmbed()
+      (patch_unembed): PatchUnEmbed()
+    )
+  )
+  (norm): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+  (conv_after_body): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (conv_before_upsample): Sequential(
+    (0): Conv2d(96, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): LeakyReLU(negative_slope=0.01, inplace=True)
+  )
+  (upsample): Upsample(
+    (0): Conv2d(64, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): PixelShuffle(upscale_factor=2)
+    (2): Conv2d(64, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): PixelShuffle(upscale_factor=2)
+  )
+  (conv_last): Conv2d(64, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (hgt_net): HGTNet(
+    (hgt_net): Sequential(
+      (0): Conv2d(1, 8, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (1): PixelUnshuffle(downscale_factor=2)
+      (2): LeakyReLU(negative_slope=0.1, inplace=True)
+      (3): Conv2d(32, 32, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+      (4): PixelUnshuffle(downscale_factor=2)
+      (5): LeakyReLU(negative_slope=0.1, inplace=True)
+      (6): Conv2d(128, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    )
+  )
+  (film_gamma): Conv2d(96, 96, kernel_size=(1, 1), stride=(1, 1))
+  (film_beta): Conv2d(96, 96, kernel_size=(1, 1), stride=(1, 1))
+  (act): Activation()
+  (vmamba): Sequential(
+    (0): VMamba2D(
+      (branches): ModuleList(
+        (0): VMamba1D(
+          (core): _GRU1DStub(
+            (proj_in): Linear(in_features=96, out_features=192, bias=True)
+            (gru): GRU(192, 192, batch_first=True)
+            (proj_out): Linear(in_features=192, out_features=96, bias=True)
+          )
+        )
+        (1): VMamba1D(
+          (core): _GRU1DStub(
+            (proj_in): Linear(in_features=96, out_features=192, bias=True)
+            (gru): GRU(192, 192, batch_first=True)
+            (proj_out): Linear(in_features=192, out_features=96, bias=True)
+          )
+        )
+        (2): VMamba1D(
+          (core): _GRU1DStub(
+            (proj_in): Linear(in_features=96, out_features=192, bias=True)
+            (gru): GRU(192, 192, batch_first=True)
+            (proj_out): Linear(in_features=192, out_features=96, bias=True)
+          )
+        )
+        (3): VMamba1D(
+          (core): _GRU1DStub(
+            (proj_in): Linear(in_features=96, out_features=192, bias=True)
+            (gru): GRU(192, 192, batch_first=True)
+            (proj_out): Linear(in_features=192, out_features=96, bias=True)
+          )
+        )
+      )
+      (proj): Conv2d(384, 96, kernel_size=(1, 1), stride=(1, 1))
+      (drop_path): DropPath()
+      (norm): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+    )
+    (1): VMamba2D(
+      (branches): ModuleList(
+        (0): VMamba1D(
+          (core): _GRU1DStub(
+            (proj_in): Linear(in_features=96, out_features=192, bias=True)
+            (gru): GRU(192, 192, batch_first=True)
+            (proj_out): Linear(in_features=192, out_features=96, bias=True)
+          )
+        )
+        (1): VMamba1D(
+          (core): _GRU1DStub(
+            (proj_in): Linear(in_features=96, out_features=192, bias=True)
+            (gru): GRU(192, 192, batch_first=True)
+            (proj_out): Linear(in_features=192, out_features=96, bias=True)
+          )
+        )
+        (2): VMamba1D(
+          (core): _GRU1DStub(
+            (proj_in): Linear(in_features=96, out_features=192, bias=True)
+            (gru): GRU(192, 192, batch_first=True)
+            (proj_out): Linear(in_features=192, out_features=96, bias=True)
+          )
+        )
+        (3): VMamba1D(
+          (core): _GRU1DStub(
+            (proj_in): Linear(in_features=96, out_features=192, bias=True)
+            (gru): GRU(192, 192, batch_first=True)
+            (proj_out): Linear(in_features=192, out_features=96, bias=True)
+          )
+        )
+      )
+      (proj): Conv2d(384, 96, kernel_size=(1, 1), stride=(1, 1))
+      (drop_path): DropPath()
+      (norm): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+    )
+  )
+)
+2025-08-25 23:25:14,828 INFO: Loss [CharbonnierLoss] is created.
+2025-08-25 23:25:14,832 INFO: Enable amp training: True
+2025-08-25 23:25:14,832 INFO: Model [SimpleClimateModel] is created.
+2025-08-25 23:25:35,817 INFO: Start training from epoch: 0, iter: 0
+2025-08-25 23:39:43,686 INFO: [SwinI..][epoch:  0, iter:   2,000, lr:(8.000e-05,)] [eta: 8:12:30, time (data): 0.366 (0.000)] l_pix: 1.0692e-01 
+2025-08-25 23:52:00,371 INFO: [SwinI..][epoch:  1, iter:   4,000, lr:(1.600e-04,)] [eta: 7:31:18, time (data): 0.363 (0.000)] l_pix: 9.9556e-02 
+2025-08-26 00:04:15,375 INFO: [SwinI..][epoch:  2, iter:   6,000, lr:(1.600e-04,)] [eta: 7:09:04, time (data): 0.364 (0.000)] l_pix: 9.4810e-02 
+2025-08-26 00:16:28,696 INFO: [SwinI..][epoch:  3, iter:   8,000, lr:(1.600e-04,)] [eta: 6:51:36, time (data): 0.368 (0.000)] l_pix: 9.1862e-02 
+2025-08-26 00:28:53,921 INFO: [SwinI..][epoch:  4, iter:  10,000, lr:(1.600e-04,)] [eta: 6:37:28, time (data): 0.368 (0.000)] l_pix: 8.9927e-02 
+2025-08-26 00:41:20,509 INFO: [SwinI..][epoch:  5, iter:  12,000, lr:(1.280e-04,)] [eta: 6:24:02, time (data): 0.370 (0.000)] l_pix: 8.8745e-02 
+2025-08-26 00:53:36,981 INFO: [SwinI..][epoch:  6, iter:  14,000, lr:(1.280e-04,)] [eta: 6:10:10, time (data): 0.362 (0.000)] l_pix: 8.7528e-02 
+2025-08-26 01:05:45,134 INFO: [SwinI..][epoch:  7, iter:  16,000, lr:(1.024e-04,)] [eta: 5:56:12, time (data): 0.367 (0.000)] l_pix: 8.6745e-02 
+2025-08-26 01:18:02,758 INFO: [SwinI..][epoch:  8, iter:  18,000, lr:(1.024e-04,)] [eta: 5:43:08, time (data): 0.361 (0.000)] l_pix: 8.6052e-02 
+2025-08-26 01:30:17,332 INFO: [SwinI..][epoch:  9, iter:  20,000, lr:(1.024e-04,)] [eta: 5:30:05, time (data): 0.367 (0.000)] l_pix: 8.5986e-02 
+2025-08-26 01:30:17,333 INFO: Saving models and training states.
+2025-08-26 01:32:10,916 INFO: === 中间指标 (1460/8760 样本) ===
+2025-08-26 01:32:10,916 INFO: psnr: 34.777082
+2025-08-26 01:32:10,916 INFO: ssim: 0.925966
+2025-08-26 01:32:10,917 INFO: mae: 0.073119
+2025-08-26 01:32:10,917 INFO: mse: 0.012068
+2025-08-26 01:32:10,917 INFO: acc: 0.957189
+2025-08-26 01:32:10,917 INFO: psd: 0.051649
+2025-08-26 01:32:10,917 INFO: ==================================================
+2025-08-26 01:34:03,887 INFO: === 中间指标 (2920/8760 样本) ===
+2025-08-26 01:34:03,887 INFO: psnr: 34.691272
+2025-08-26 01:34:03,887 INFO: ssim: 0.927314
+2025-08-26 01:34:03,887 INFO: mae: 0.074150
+2025-08-26 01:34:03,887 INFO: mse: 0.012414
+2025-08-26 01:34:03,888 INFO: acc: 0.958418
+2025-08-26 01:34:03,888 INFO: psd: 0.053731
+2025-08-26 01:34:03,888 INFO: ==================================================
+2025-08-26 01:35:56,842 INFO: === 中间指标 (4380/8760 样本) ===
+2025-08-26 01:35:56,843 INFO: psnr: 34.452191
+2025-08-26 01:35:56,843 INFO: ssim: 0.927918
+2025-08-26 01:35:56,843 INFO: mae: 0.075893
+2025-08-26 01:35:56,843 INFO: mse: 0.013216
+2025-08-26 01:35:56,843 INFO: acc: 0.957720
+2025-08-26 01:35:56,843 INFO: psd: 0.055640
+2025-08-26 01:35:56,843 INFO: ==================================================
+2025-08-26 01:37:49,794 INFO: === 中间指标 (5840/8760 样本) ===
+2025-08-26 01:37:49,794 INFO: psnr: 34.324670
+2025-08-26 01:37:49,794 INFO: ssim: 0.930100
+2025-08-26 01:37:49,794 INFO: mae: 0.076701
+2025-08-26 01:37:49,794 INFO: mse: 0.013581
+2025-08-26 01:37:49,795 INFO: acc: 0.958397
+2025-08-26 01:37:49,795 INFO: psd: 0.056058
+2025-08-26 01:37:49,795 INFO: ==================================================
+2025-08-26 01:39:42,733 INFO: === 中间指标 (7300/8760 样本) ===
+2025-08-26 01:39:42,733 INFO: psnr: 34.423983
+2025-08-26 01:39:42,733 INFO: ssim: 0.931924
+2025-08-26 01:39:42,733 INFO: mae: 0.075804
+2025-08-26 01:39:42,733 INFO: mse: 0.013264
+2025-08-26 01:39:42,733 INFO: acc: 0.959332
+2025-08-26 01:39:42,734 INFO: psd: 0.054458
+2025-08-26 01:39:42,734 INFO: ==================================================
+2025-08-26 01:41:35,717 INFO: === 中间指标 (8760/8760 样本) ===
+2025-08-26 01:41:35,718 INFO: psnr: 34.496118
+2025-08-26 01:41:35,718 INFO: ssim: 0.931575
+2025-08-26 01:41:35,718 INFO: mae: 0.075366
+2025-08-26 01:41:35,718 INFO: mse: 0.013027
+2025-08-26 01:41:35,718 INFO: acc: 0.958978
+2025-08-26 01:41:35,718 INFO: psd: 0.054348
+2025-08-26 01:41:35,718 INFO: ==================================================
+2025-08-26 01:41:35,719 INFO: Validation climate_val
+	 # psnr: 34.4961	Best: 34.4961 @ 20000 iter
+	 # ssim: 0.9316	Best: 0.9316 @ 20000 iter
+	 # mae: 0.0754	Best: 0.0754 @ 20000 iter
+	 # mse: 0.0130	Best: 0.0130 @ 20000 iter
+	 # acc: 0.9590	Best: 0.9590 @ 20000 iter
+	 # psd: 0.0543	Best: 0.0543 @ 20000 iter
+
+2025-08-26 01:54:01,771 INFO: [SwinI..][epoch: 10, iter:  22,000, lr:(8.190e-05,)] [eta: 5:43:52, time (data): 0.454 (0.085)] l_pix: 8.5663e-02 
+2025-08-26 02:06:20,258 INFO: [SwinI..][epoch: 10, iter:  24,000, lr:(8.190e-05,)] [eta: 5:28:01, time (data): 0.370 (0.000)] l_pix: 8.3916e-02 
+2025-08-26 02:18:47,388 INFO: [SwinI..][epoch: 11, iter:  26,000, lr:(8.190e-05,)] [eta: 5:12:59, time (data): 0.428 (0.000)] l_pix: 8.4641e-02 
+2025-08-26 02:32:37,389 INFO: [SwinI..][epoch: 12, iter:  28,000, lr:(8.190e-05,)] [eta: 5:00:32, time (data): 0.428 (0.000)] l_pix: 8.3696e-02 
+2025-08-26 02:45:26,138 INFO: [SwinI..][epoch: 13, iter:  30,000, lr:(8.190e-05,)] [eta: 4:46:26, time (data): 0.366 (0.000)] l_pix: 8.1941e-02 
+2025-08-26 02:57:47,493 INFO: [SwinI..][epoch: 14, iter:  32,000, lr:(8.190e-05,)] [eta: 4:31:55, time (data): 0.367 (0.000)] l_pix: 8.2952e-02 
+2025-08-26 03:10:04,636 INFO: [SwinI..][epoch: 15, iter:  34,000, lr:(8.190e-05,)] [eta: 4:17:34, time (data): 0.363 (0.000)] l_pix: 8.2136e-02 
+2025-08-26 03:22:45,916 INFO: [SwinI..][epoch: 16, iter:  36,000, lr:(8.190e-05,)] [eta: 4:03:52, time (data): 0.442 (0.000)] l_pix: 8.1388e-02 
+2025-08-26 03:35:55,271 INFO: [SwinI..][epoch: 17, iter:  38,000, lr:(8.190e-05,)] [eta: 3:50:42, time (data): 0.368 (0.000)] l_pix: 8.2145e-02 
+2025-08-26 03:48:12,243 INFO: [SwinI..][epoch: 18, iter:  40,000, lr:(8.190e-05,)] [eta: 3:36:48, time (data): 0.365 (0.000)] l_pix: 8.2610e-02 
+2025-08-26 03:48:12,244 INFO: Saving models and training states.
+2025-08-26 03:50:05,126 INFO: === 中间指标 (1460/8760 样本) ===
+2025-08-26 03:50:05,126 INFO: psnr: 34.607443
+2025-08-26 03:50:05,127 INFO: ssim: 0.923997
+2025-08-26 03:50:05,127 INFO: mae: 0.074106
+2025-08-26 03:50:05,127 INFO: mse: 0.012573
+2025-08-26 03:50:05,127 INFO: acc: 0.956106
+2025-08-26 03:50:05,127 INFO: psd: 0.051480
+2025-08-26 03:50:05,127 INFO: ==================================================
+2025-08-26 03:51:57,494 INFO: === 中间指标 (2920/8760 样本) ===
+2025-08-26 03:51:57,494 INFO: psnr: 34.546990
+2025-08-26 03:51:57,494 INFO: ssim: 0.925430
+2025-08-26 03:51:57,494 INFO: mae: 0.075037
+2025-08-26 03:51:57,494 INFO: mse: 0.012855
+2025-08-26 03:51:57,495 INFO: acc: 0.957359
+2025-08-26 03:51:57,495 INFO: psd: 0.053424
+2025-08-26 03:51:57,495 INFO: ==================================================
+2025-08-26 03:53:49,869 INFO: === 中间指标 (4380/8760 样本) ===
+2025-08-26 03:53:49,869 INFO: psnr: 34.338906
+2025-08-26 03:53:49,869 INFO: ssim: 0.926383
+2025-08-26 03:53:49,869 INFO: mae: 0.076614
+2025-08-26 03:53:49,870 INFO: mse: 0.013575
+2025-08-26 03:53:49,870 INFO: acc: 0.956918
+2025-08-26 03:53:49,870 INFO: psd: 0.054854
+2025-08-26 03:53:49,870 INFO: ==================================================
+2025-08-26 03:55:42,255 INFO: === 中间指标 (5840/8760 样本) ===
+2025-08-26 03:55:42,255 INFO: psnr: 34.210455
+2025-08-26 03:55:42,255 INFO: ssim: 0.928566
+2025-08-26 03:55:42,256 INFO: mae: 0.077449
+2025-08-26 03:55:42,256 INFO: mse: 0.013949
+2025-08-26 03:55:42,256 INFO: acc: 0.957517
+2025-08-26 03:55:42,256 INFO: psd: 0.055053
+2025-08-26 03:55:42,256 INFO: ==================================================
+2025-08-26 03:57:34,653 INFO: === 中间指标 (7300/8760 样本) ===
+2025-08-26 03:57:34,654 INFO: psnr: 34.291893
+2025-08-26 03:57:34,654 INFO: ssim: 0.930339
+2025-08-26 03:57:34,654 INFO: mae: 0.076629
+2025-08-26 03:57:34,654 INFO: mse: 0.013677
+2025-08-26 03:57:34,654 INFO: acc: 0.958394
+2025-08-26 03:57:34,654 INFO: psd: 0.053718
+2025-08-26 03:57:34,654 INFO: ==================================================
+2025-08-26 03:59:27,042 INFO: === 中间指标 (8760/8760 样本) ===
+2025-08-26 03:59:27,043 INFO: psnr: 34.360670
+2025-08-26 03:59:27,043 INFO: ssim: 0.930020
+2025-08-26 03:59:27,043 INFO: mae: 0.076217
+2025-08-26 03:59:27,043 INFO: mse: 0.013448
+2025-08-26 03:59:27,043 INFO: acc: 0.958058
+2025-08-26 03:59:27,043 INFO: psd: 0.053837
+2025-08-26 03:59:27,044 INFO: ==================================================
+2025-08-26 03:59:27,044 INFO: Validation climate_val
+	 # psnr: 34.3607	Best: 34.4961 @ 20000 iter
+	 # ssim: 0.9300	Best: 0.9316 @ 20000 iter
+	 # mae: 0.0762	Best: 0.0754 @ 20000 iter
+	 # mse: 0.0134	Best: 0.0130 @ 20000 iter
+	 # acc: 0.9581	Best: 0.9590 @ 20000 iter
+	 # psd: 0.0538	Best: 0.0538 @ 40000 iter
+
+2025-08-26 04:11:39,090 INFO: [SwinI..][epoch: 19, iter:  42,000, lr:(8.190e-05,)] [eta: 3:31:20, time (data): 0.364 (0.000)] l_pix: 8.2332e-02 
+2025-08-26 04:23:56,606 INFO: [SwinI..][epoch: 20, iter:  44,000, lr:(8.190e-05,)] [eta: 3:16:51, time (data): 0.408 (0.043)] l_pix: 7.9895e-02 
+2025-08-26 04:36:06,320 INFO: [SwinI..][epoch: 20, iter:  46,000, lr:(8.190e-05,)] [eta: 3:02:29, time (data): 0.365 (0.000)] l_pix: 8.0631e-02 
+2025-08-26 04:48:22,722 INFO: [SwinI..][epoch: 21, iter:  48,000, lr:(8.190e-05,)] [eta: 2:48:22, time (data): 0.365 (0.000)] l_pix: 8.0713e-02 
+2025-08-26 05:00:42,363 INFO: [SwinI..][epoch: 22, iter:  50,000, lr:(8.190e-05,)] [eta: 2:34:25, time (data): 0.369 (0.000)] l_pix: 7.9901e-02 
+2025-08-26 05:13:29,871 INFO: [SwinI..][epoch: 23, iter:  52,000, lr:(8.190e-05,)] [eta: 2:20:47, time (data): 0.369 (0.000)] l_pix: 7.9653e-02 
+2025-08-26 05:27:36,146 INFO: [SwinI..][epoch: 24, iter:  54,000, lr:(8.190e-05,)] [eta: 2:07:40, time (data): 0.369 (0.000)] l_pix: 7.8294e-02 
+2025-08-26 05:40:13,795 INFO: [SwinI..][epoch: 25, iter:  56,000, lr:(8.190e-05,)] [eta: 1:54:02, time (data): 0.369 (0.000)] l_pix: 8.0000e-02 
+2025-08-26 05:52:38,240 INFO: [SwinI..][epoch: 26, iter:  58,000, lr:(8.190e-05,)] [eta: 1:40:25, time (data): 0.368 (0.000)] l_pix: 7.9874e-02 
+2025-08-26 06:05:20,197 INFO: [SwinI..][epoch: 27, iter:  60,000, lr:(8.190e-05,)] [eta: 1:26:56, time (data): 0.428 (0.000)] l_pix: 7.9970e-02 
+2025-08-26 06:05:20,198 INFO: Saving models and training states.
+2025-08-26 06:07:13,279 INFO: === 中间指标 (1460/8760 样本) ===
+2025-08-26 06:07:13,279 INFO: psnr: 34.489686
+2025-08-26 06:07:13,280 INFO: ssim: 0.922486
+2025-08-26 06:07:13,280 INFO: mae: 0.075183
+2025-08-26 06:07:13,280 INFO: mse: 0.012934
+2025-08-26 06:07:13,280 INFO: acc: 0.955423
+2025-08-26 06:07:13,280 INFO: psd: 0.052105
+2025-08-26 06:07:13,280 INFO: ==================================================
+2025-08-26 06:09:05,868 INFO: === 中间指标 (2920/8760 样本) ===
+2025-08-26 06:09:05,868 INFO: psnr: 34.432017
+2025-08-26 06:09:05,869 INFO: ssim: 0.923934
+2025-08-26 06:09:05,869 INFO: mae: 0.076069
+2025-08-26 06:09:05,869 INFO: mse: 0.013208
+2025-08-26 06:09:05,869 INFO: acc: 0.956697
+2025-08-26 06:09:05,869 INFO: psd: 0.053921
+2025-08-26 06:09:05,869 INFO: ==================================================
+2025-08-26 06:10:58,465 INFO: === 中间指标 (4380/8760 样本) ===
+2025-08-26 06:10:58,466 INFO: psnr: 34.237871
+2025-08-26 06:10:58,466 INFO: ssim: 0.924976
+2025-08-26 06:10:58,466 INFO: mae: 0.077553
+2025-08-26 06:10:58,466 INFO: mse: 0.013893
+2025-08-26 06:10:58,466 INFO: acc: 0.956178
+2025-08-26 06:10:58,466 INFO: psd: 0.055548
+2025-08-26 06:10:58,466 INFO: ==================================================
+2025-08-26 06:12:51,064 INFO: === 中间指标 (5840/8760 样本) ===
+2025-08-26 06:12:51,065 INFO: psnr: 34.114202
+2025-08-26 06:12:51,065 INFO: ssim: 0.927293
+2025-08-26 06:12:51,065 INFO: mae: 0.078362
+2025-08-26 06:12:51,065 INFO: mse: 0.014261
+2025-08-26 06:12:51,065 INFO: acc: 0.956878
+2025-08-26 06:12:51,065 INFO: psd: 0.055994
+2025-08-26 06:12:51,065 INFO: ==================================================
+2025-08-26 06:14:43,647 INFO: === 中间指标 (7300/8760 样本) ===
+2025-08-26 06:14:43,648 INFO: psnr: 34.203260
+2025-08-26 06:14:43,648 INFO: ssim: 0.929150
+2025-08-26 06:14:43,648 INFO: mae: 0.077510
+2025-08-26 06:14:43,648 INFO: mse: 0.013959
+2025-08-26 06:14:43,648 INFO: acc: 0.957805
+2025-08-26 06:14:43,648 INFO: psd: 0.054421
+2025-08-26 06:14:43,649 INFO: ==================================================
+2025-08-26 06:16:36,237 INFO: === 中间指标 (8760/8760 样本) ===
+2025-08-26 06:16:36,237 INFO: psnr: 34.276586
+2025-08-26 06:16:36,238 INFO: ssim: 0.928817
+2025-08-26 06:16:36,238 INFO: mae: 0.077058
+2025-08-26 06:16:36,238 INFO: mse: 0.013712
+2025-08-26 06:16:36,238 INFO: acc: 0.957428
+2025-08-26 06:16:36,238 INFO: psd: 0.054423
+2025-08-26 06:16:36,238 INFO: ==================================================
+2025-08-26 06:16:36,239 INFO: Validation climate_val
+	 # psnr: 34.2766	Best: 34.4961 @ 20000 iter
+	 # ssim: 0.9288	Best: 0.9316 @ 20000 iter
+	 # mae: 0.0771	Best: 0.0754 @ 20000 iter
+	 # mse: 0.0137	Best: 0.0130 @ 20000 iter
+	 # acc: 0.9574	Best: 0.9590 @ 20000 iter
+	 # psd: 0.0544	Best: 0.0538 @ 40000 iter
+
+2025-08-26 06:29:19,942 INFO: [SwinI..][epoch: 28, iter:  62,000, lr:(8.190e-05,)] [eta: 1:15:32, time (data): 0.367 (0.000)] l_pix: 7.9171e-02 
+2025-08-26 06:43:24,209 INFO: [SwinI..][epoch: 29, iter:  64,000, lr:(8.190e-05,)] [eta: 1:01:55, time (data): 0.428 (0.000)] l_pix: 7.7504e-02 
+2025-08-26 06:57:46,889 INFO: [SwinI..][epoch: 30, iter:  66,000, lr:(8.190e-05,)] [eta: 0:48:20, time (data): 0.426 (0.000)] l_pix: 7.6852e-02 
+2025-08-26 07:11:03,042 INFO: [SwinI..][epoch: 31, iter:  68,000, lr:(8.190e-05,)] [eta: 0:34:36, time (data): 0.363 (0.000)] l_pix: 7.6798e-02 
+2025-08-26 07:23:08,806 INFO: [SwinI..][epoch: 31, iter:  70,000, lr:(8.190e-05,)] [eta: 0:20:51, time (data): 0.364 (0.000)] l_pix: 7.7473e-02 
+2025-08-26 07:35:21,868 INFO: [SwinI..][epoch: 32, iter:  72,000, lr:(8.190e-05,)] [eta: 0:07:11, time (data): 0.401 (0.000)] l_pix: 7.8485e-02 
+2025-08-26 07:42:01,395 INFO: End of training. Time consumed: 8:16:25
+2025-08-26 07:42:01,395 INFO: Save the latest model.
+2025-08-26 07:43:54,545 INFO: === 中间指标 (1460/8760 样本) ===
+2025-08-26 07:43:54,545 INFO: psnr: 34.432872
+2025-08-26 07:43:54,546 INFO: ssim: 0.921867
+2025-08-26 07:43:54,546 INFO: mae: 0.075388
+2025-08-26 07:43:54,546 INFO: mse: 0.013120
+2025-08-26 07:43:54,546 INFO: acc: 0.954937
+2025-08-26 07:43:54,546 INFO: psd: 0.050334
+2025-08-26 07:43:54,546 INFO: ==================================================
+2025-08-26 07:45:47,307 INFO: === 中间指标 (2920/8760 样本) ===
+2025-08-26 07:45:47,308 INFO: psnr: 34.381199
+2025-08-26 07:45:47,308 INFO: ssim: 0.923379
+2025-08-26 07:45:47,308 INFO: mae: 0.076291
+2025-08-26 07:45:47,308 INFO: mse: 0.013374
+2025-08-26 07:45:47,308 INFO: acc: 0.956292
+2025-08-26 07:45:47,308 INFO: psd: 0.052175
+2025-08-26 07:45:47,308 INFO: ==================================================
+2025-08-26 07:47:40,082 INFO: === 中间指标 (4380/8760 样本) ===
+2025-08-26 07:47:40,082 INFO: psnr: 34.188545
+2025-08-26 07:47:40,082 INFO: ssim: 0.924422
+2025-08-26 07:47:40,082 INFO: mae: 0.077790
+2025-08-26 07:47:40,082 INFO: mse: 0.014062
+2025-08-26 07:47:40,082 INFO: acc: 0.955775
+2025-08-26 07:47:40,083 INFO: psd: 0.053551
+2025-08-26 07:47:40,083 INFO: ==================================================
+2025-08-26 07:49:32,865 INFO: === 中间指标 (5840/8760 样本) ===
+2025-08-26 07:49:32,866 INFO: psnr: 34.059171
+2025-08-26 07:49:32,866 INFO: ssim: 0.926627
+2025-08-26 07:49:32,866 INFO: mae: 0.078623
+2025-08-26 07:49:32,866 INFO: mse: 0.014451
+2025-08-26 07:49:32,866 INFO: acc: 0.956377
+2025-08-26 07:49:32,866 INFO: psd: 0.054007
+2025-08-26 07:49:32,866 INFO: ==================================================
+2025-08-26 07:51:25,644 INFO: === 中间指标 (7300/8760 样本) ===
+2025-08-26 07:51:25,644 INFO: psnr: 34.137026
+2025-08-26 07:51:25,645 INFO: ssim: 0.928359
+2025-08-26 07:51:25,645 INFO: mae: 0.077813
+2025-08-26 07:51:25,645 INFO: mse: 0.014182
+2025-08-26 07:51:25,645 INFO: acc: 0.957238
+2025-08-26 07:51:25,645 INFO: psd: 0.052852
+2025-08-26 07:51:25,645 INFO: ==================================================
+2025-08-26 07:53:18,415 INFO: === 中间指标 (8760/8760 样本) ===
+2025-08-26 07:53:18,415 INFO: psnr: 34.212354
+2025-08-26 07:53:18,415 INFO: ssim: 0.928076
+2025-08-26 07:53:18,415 INFO: mae: 0.077354
+2025-08-26 07:53:18,416 INFO: mse: 0.013926
+2025-08-26 07:53:18,416 INFO: acc: 0.956911
+2025-08-26 07:53:18,416 INFO: psd: 0.052989
+2025-08-26 07:53:18,416 INFO: ==================================================
+2025-08-26 07:53:18,417 INFO: Validation climate_val
+	 # psnr: 34.2124	Best: 34.4961 @ 20000 iter
+	 # ssim: 0.9281	Best: 0.9316 @ 20000 iter
+	 # mae: 0.0774	Best: 0.0754 @ 20000 iter
+	 # mse: 0.0139	Best: 0.0130 @ 20000 iter
+	 # acc: 0.9569	Best: 0.9590 @ 20000 iter
+	 # psd: 0.0530	Best: 0.0530 @ 73062 iter
+

@@ -1,0 +1,307 @@
+2025-08-20 10:07:07,552 INFO: 
+                ____                _       _____  ____
+               / __ ) ____ _ _____ (_)_____/ ___/ / __ \
+              / __  |/ __ `// ___// // ___/\__ \ / /_/ /
+             / /_/ // /_/ /(__  )/ // /__ ___/ // _, _/
+            /_____/ \__,_//____//_/ \___//____//_/ |_|
+     ______                   __   __                 __      __
+    / ____/____   ____   ____/ /  / /   __  __ _____ / /__   / /
+   / / __ / __ \ / __ \ / __  /  / /   / / / // ___// //_/  / /
+  / /_/ // /_/ // /_/ // /_/ /  / /___/ /_/ // /__ / /<    /_/
+  \____/ \____/ \____/ \____/  /_____/\____/ \___//_/|_|  (_)
+    
+Version Information: 
+	BasicSR: 1.4.2
+	PyTorch: 1.12.1+cu116
+	TorchVision: 0.13.1+cu116
+2025-08-20 10:07:07,553 INFO: 
+  name: SRCNN_climate_baseline_7to1_64x64
+  model_type: SimpleClimateModel
+  scale: 4
+  num_gpu: 2
+  manual_seed: 0
+  fp16: True
+  datasets:[
+    train:[
+      name: climate_train
+      type: ClimateDataset
+      phase: train
+      dataroot_gt: /home/lyb/diffusion/main2 copy/dataset
+      normalize: True
+      input_channels: 3
+      input_channel_indices: [0, 1, 2]
+      use_topo: False
+      use_shuffle: True
+      num_worker_per_gpu: 1
+      batch_size_per_gpu: 20
+      prefetch_mode: None
+      scale: 4
+    ]
+    val:[
+      name: climate_val
+      type: ClimateDataset
+      phase: val
+      dataroot_gt: /home/lyb/diffusion/main2 copy/dataset
+      normalize: True
+      input_channels: 3
+      input_channel_indices: [0, 1, 2]
+      use_topo: False
+      scale: 4
+    ]
+  ]
+  network_g:[
+    type: SRCNNClimate
+    upscale: 4
+    num_in_ch: 3
+    num_out_ch: 1
+    feat1: 64
+    feat2: 32
+    activation: none
+  ]
+  path:[
+    pretrain_network_g: None
+    strict_load_g: True
+    resume_state: None
+    experiments_root: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/experiments/SRCNN_climate_baseline_7to1_64x64
+    models: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/experiments/SRCNN_climate_baseline_7to1_64x64/models
+    training_states: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/experiments/SRCNN_climate_baseline_7to1_64x64/training_states
+    log: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/experiments/SRCNN_climate_baseline_7to1_64x64
+    visualization: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/experiments/SRCNN_climate_baseline_7to1_64x64/visualization
+  ]
+  train:[
+    optim_g:[
+      type: Adam
+      lr: 5e-05
+      betas: [0.9, 0.99]
+      weight_decay: 1e-06
+    ]
+    scheduler:[
+      type: MultiStepLR
+      milestones: [5000, 10000, 15000, 20000]
+      gamma: 0.8
+    ]
+    total_iter: 73060
+    warmup_iter: 500
+    pixel_opt:[
+      type: CharbonnierLoss
+      loss_weight: 1.0
+      reduction: mean
+      eps: 0.001
+    ]
+  ]
+  val:[
+    val_freq: 10000
+    save_img: False
+    pbar: True
+    metrics:[
+      psnr:[
+        type: calculate_psnr
+        crop_border: 0
+        test_y_channel: False
+        better: higher
+      ]
+      ssim:[
+        type: calculate_ssim
+        crop_border: 0
+        test_y_channel: False
+        better: higher
+      ]
+      mae:[
+        type: calculate_climate_mae
+        crop_border: 0
+        better: lower
+      ]
+      mse:[
+        type: calculate_climate_mse
+        crop_border: 0
+        better: lower
+      ]
+      acc:[
+        type: calculate_climate_acc_tiles
+        crop_border: 0
+        better: higher
+      ]
+      psd:[
+        type: calculate_climate_psd_log
+        crop_border: 0
+        better: lower
+      ]
+    ]
+  ]
+  logger:[
+    print_freq: 500
+    save_checkpoint_freq: 10000
+    use_tb_logger: True
+  ]
+  dist_params:[
+    backend: nccl
+    port: 29500
+  ]
+  dist: False
+  rank: 0
+  world_size: 1
+  auto_resume: False
+  is_train: True
+  root_path: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main
+
+2025-08-20 10:07:07,641 INFO: Loading data from /home/lyb/diffusion/main2 copy/dataset/dict_s2s_train.pt
+2025-08-20 10:07:17,085 INFO: Detected legacy in-memory tensor dataset format.
+2025-08-20 10:07:17,086 INFO: LR_input shape (raw): (3, 87672, 16, 16)
+2025-08-20 10:07:17,086 INFO: HR_target shape (raw): (3, 87672, 64, 64)
+2025-08-20 10:07:17,086 INFO: HR_topo shape: (2, 64, 64)
+2025-08-20 10:07:18,326 INFO: Unified LR shape [N,C,H,W]: (87672, 3, 16, 16)
+2025-08-20 10:07:18,326 INFO: Unified HR shape [N,1,H,W]: (87672, 1, 64, 64)
+2025-08-20 10:07:19,113 INFO: LR mean: tensor([-0.3224, -0.0165,  0.7150])
+2025-08-20 10:07:19,114 INFO: LR std: tensor([1.1106, 0.9532, 0.3245])
+2025-08-20 10:07:19,115 INFO: HR mean: -0.3548726439476013
+2025-08-20 10:07:19,115 INFO: HR std: 1.097210168838501
+2025-08-20 10:07:20,817 INFO: Dataset [ClimateDataset] - climate_train is built.
+2025-08-20 10:07:20,818 INFO: Training statistics:
+	Number of train images: 87672
+	Dataset enlarge ratio: 1
+	Batch size per gpu: 20
+	World size (gpu number): 1
+	Require iter number per epoch: 4384
+	Total epochs: 17; iters: 73060.
+2025-08-20 10:07:20,819 INFO: Loading data from /home/lyb/diffusion/main2 copy/dataset/dict_s2s_val.pt
+2025-08-20 10:07:21,787 INFO: Detected legacy in-memory tensor dataset format.
+2025-08-20 10:07:21,788 INFO: LR_input shape (raw): (3, 8760, 16, 16)
+2025-08-20 10:07:21,788 INFO: HR_target shape (raw): (3, 8760, 64, 64)
+2025-08-20 10:07:21,788 INFO: HR_topo shape: (2, 64, 64)
+2025-08-20 10:07:21,893 INFO: Unified LR shape [N,C,H,W]: (8760, 3, 16, 16)
+2025-08-20 10:07:21,894 INFO: Unified HR shape [N,1,H,W]: (8760, 1, 64, 64)
+2025-08-20 10:07:21,971 INFO: LR mean: tensor([-0.3108, -0.0110,  0.7089])
+2025-08-20 10:07:21,972 INFO: LR std: tensor([1.1441, 0.9277, 0.3185])
+2025-08-20 10:07:21,972 INFO: HR mean: -0.34806132316589355
+2025-08-20 10:07:21,973 INFO: HR std: 1.1247708797454834
+2025-08-20 10:07:22,129 INFO: Dataset [ClimateDataset] - climate_val is built.
+2025-08-20 10:07:22,129 INFO: Number of val images/folders in climate_val: 8760
+2025-08-20 10:07:22,134 INFO: Network [SRCNNClimate] is created.
+2025-08-20 10:07:25,426 INFO: Network: DataParallel - SRCNNClimate, with parameters: 18,497
+2025-08-20 10:07:25,426 INFO: SRCNNClimate(
+  (conv1): Conv2d(3, 64, kernel_size=(9, 9), stride=(1, 1), padding=(4, 4))
+  (relu1): ReLU(inplace=True)
+  (conv2): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1))
+  (relu2): ReLU(inplace=True)
+  (conv3): Conv2d(32, 1, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2))
+  (act): Activation()
+)
+2025-08-20 10:07:25,427 INFO: Loss [CharbonnierLoss] is created.
+2025-08-20 10:07:25,428 INFO: Enable amp training: True
+2025-08-20 10:07:25,428 INFO: Model [SimpleClimateModel] is created.
+2025-08-20 10:07:26,596 INFO: Start training from epoch: 0, iter: 0
+2025-08-20 10:07:50,933 INFO: [SRCNN..][epoch:  0, iter:     500, lr:(4.990e-05,)] [eta: 0:18:12, time (data): 0.015 (0.002)] l_pix: 1.9621e-01 
+2025-08-20 10:07:58,673 INFO: [SRCNN..][epoch:  0, iter:   1,000, lr:(4.990e-05,)] [eta: 0:18:20, time (data): 0.015 (0.003)] l_pix: 1.4207e-01 
+2025-08-20 10:08:07,902 INFO: [SRCNN..][epoch:  0, iter:   1,500, lr:(4.990e-05,)] [eta: 0:19:28, time (data): 0.015 (0.003)] l_pix: 1.2998e-01 
+2025-08-20 10:08:16,137 INFO: [SRCNN..][epoch:  0, iter:   2,000, lr:(4.990e-05,)] [eta: 0:19:22, time (data): 0.015 (0.003)] l_pix: 1.2483e-01 
+2025-08-20 10:08:26,138 INFO: [SRCNN..][epoch:  1, iter:   2,500, lr:(4.990e-05,)] [eta: 0:20:06, time (data): 0.014 (0.002)] l_pix: 1.2781e-01 
+2025-08-20 10:08:34,449 INFO: [SRCNN..][epoch:  1, iter:   3,000, lr:(4.990e-05,)] [eta: 0:19:52, time (data): 0.017 (0.004)] l_pix: 1.2127e-01 
+2025-08-20 10:08:42,756 INFO: [SRCNN..][epoch:  1, iter:   3,500, lr:(4.990e-05,)] [eta: 0:19:39, time (data): 0.017 (0.003)] l_pix: 1.2675e-01 
+2025-08-20 10:08:51,067 INFO: [SRCNN..][epoch:  1, iter:   4,000, lr:(4.990e-05,)] [eta: 0:19:28, time (data): 0.016 (0.003)] l_pix: 1.2225e-01 
+2025-08-20 10:09:02,201 INFO: [SRCNN..][epoch:  2, iter:   4,500, lr:(4.990e-05,)] [eta: 0:20:00, time (data): 0.017 (0.003)] l_pix: 1.1922e-01 
+2025-08-20 10:09:10,527 INFO: [SRCNN..][epoch:  2, iter:   5,000, lr:(4.990e-05,)] [eta: 0:19:45, time (data): 0.017 (0.003)] l_pix: 1.2088e-01 
+2025-08-20 10:09:18,867 INFO: [SRCNN..][epoch:  2, iter:   5,500, lr:(3.992e-05,)] [eta: 0:19:32, time (data): 0.017 (0.003)] l_pix: 1.1917e-01 
+2025-08-20 10:09:27,243 INFO: [SRCNN..][epoch:  2, iter:   6,000, lr:(3.992e-05,)] [eta: 0:19:20, time (data): 0.017 (0.003)] l_pix: 1.1940e-01 
+2025-08-20 10:09:35,486 INFO: [SRCNN..][epoch:  2, iter:   6,500, lr:(3.992e-05,)] [eta: 0:19:07, time (data): 0.017 (0.003)] l_pix: 1.1792e-01 
+2025-08-20 10:09:46,709 INFO: [SRCNN..][epoch:  3, iter:   7,000, lr:(3.992e-05,)] [eta: 0:19:23, time (data): 0.017 (0.003)] l_pix: 1.1954e-01 
+2025-08-20 10:09:55,264 INFO: [SRCNN..][epoch:  3, iter:   7,500, lr:(3.992e-05,)] [eta: 0:19:12, time (data): 0.017 (0.003)] l_pix: 1.2040e-01 
+2025-08-20 10:10:03,605 INFO: [SRCNN..][epoch:  3, iter:   8,000, lr:(3.992e-05,)] [eta: 0:19:00, time (data): 0.017 (0.003)] l_pix: 1.1821e-01 
+2025-08-20 10:10:12,046 INFO: [SRCNN..][epoch:  3, iter:   8,500, lr:(3.992e-05,)] [eta: 0:18:48, time (data): 0.017 (0.003)] l_pix: 1.1793e-01 
+2025-08-20 10:10:23,214 INFO: [SRCNN..][epoch:  4, iter:   9,000, lr:(3.992e-05,)] [eta: 0:18:57, time (data): 0.017 (0.003)] l_pix: 1.1923e-01 
+2025-08-20 10:10:31,629 INFO: [SRCNN..][epoch:  4, iter:   9,500, lr:(3.992e-05,)] [eta: 0:18:45, time (data): 0.017 (0.003)] l_pix: 1.2040e-01 
+2025-08-20 10:10:39,976 INFO: [SRCNN..][epoch:  4, iter:  10,000, lr:(3.992e-05,)] [eta: 0:18:33, time (data): 0.017 (0.003)] l_pix: 1.1550e-01 
+2025-08-20 10:10:39,977 INFO: Saving models and training states.
+2025-08-20 10:15:16,791 INFO: Validation climate_val
+	 # psnr: 31.8356	Best: 31.8356 @ 10000 iter
+	 # ssim: 0.8996	Best: 0.8996 @ 10000 iter
+	 # mae: 0.1023	Best: 0.1023 @ 10000 iter
+	 # mse: 0.0243	Best: 0.0243 @ 10000 iter
+	 # acc: 0.9385	Best: 0.9385 @ 10000 iter
+	 # psd: 0.0760	Best: 0.0760 @ 10000 iter
+
+2025-08-20 10:15:26,666 INFO: [SRCNN..][epoch:  4, iter:  10,500, lr:(3.194e-05,)] [eta: 0:45:59, time (data): 0.020 (0.004)] l_pix: 1.1985e-01 
+2025-08-20 10:15:39,160 INFO: [SRCNN..][epoch:  5, iter:  11,000, lr:(3.194e-05,)] [eta: 0:44:43, time (data): 0.039 (0.023)] l_pix: 1.1882e-01 
+2025-08-20 10:15:48,739 INFO: [SRCNN..][epoch:  5, iter:  11,500, lr:(3.194e-05,)] [eta: 0:43:17, time (data): 0.019 (0.003)] l_pix: 1.1888e-01 
+2025-08-20 10:15:58,496 INFO: [SRCNN..][epoch:  5, iter:  12,000, lr:(3.194e-05,)] [eta: 0:41:59, time (data): 0.020 (0.004)] l_pix: 1.1539e-01 
+2025-08-20 10:16:08,167 INFO: [SRCNN..][epoch:  5, iter:  12,500, lr:(3.194e-05,)] [eta: 0:40:45, time (data): 0.020 (0.003)] l_pix: 1.1851e-01 
+2025-08-20 10:16:17,983 INFO: [SRCNN..][epoch:  5, iter:  13,000, lr:(3.194e-05,)] [eta: 0:39:37, time (data): 0.019 (0.003)] l_pix: 1.1645e-01 
+2025-08-20 10:16:30,473 INFO: [SRCNN..][epoch:  6, iter:  13,500, lr:(3.194e-05,)] [eta: 0:38:45, time (data): 0.019 (0.003)] l_pix: 1.1384e-01 
+2025-08-20 10:16:40,003 INFO: [SRCNN..][epoch:  6, iter:  14,000, lr:(3.194e-05,)] [eta: 0:37:43, time (data): 0.019 (0.003)] l_pix: 1.1545e-01 
+2025-08-20 10:16:49,621 INFO: [SRCNN..][epoch:  6, iter:  14,500, lr:(3.194e-05,)] [eta: 0:36:45, time (data): 0.020 (0.004)] l_pix: 1.1728e-01 
+2025-08-20 10:16:59,218 INFO: [SRCNN..][epoch:  6, iter:  15,000, lr:(3.194e-05,)] [eta: 0:35:51, time (data): 0.019 (0.003)] l_pix: 1.1443e-01 
+2025-08-20 10:17:11,228 INFO: [SRCNN..][epoch:  7, iter:  15,500, lr:(2.555e-05,)] [eta: 0:35:08, time (data): 0.019 (0.003)] l_pix: 1.1915e-01 
+2025-08-20 10:17:20,854 INFO: [SRCNN..][epoch:  7, iter:  16,000, lr:(2.555e-05,)] [eta: 0:34:19, time (data): 0.019 (0.004)] l_pix: 1.1667e-01 
+2025-08-20 10:17:30,560 INFO: [SRCNN..][epoch:  7, iter:  16,500, lr:(2.555e-05,)] [eta: 0:33:32, time (data): 0.018 (0.004)] l_pix: 1.1589e-01 
+2025-08-20 10:17:40,303 INFO: [SRCNN..][epoch:  7, iter:  17,000, lr:(2.555e-05,)] [eta: 0:32:48, time (data): 0.020 (0.004)] l_pix: 1.1438e-01 
+2025-08-20 10:17:49,979 INFO: [SRCNN..][epoch:  7, iter:  17,500, lr:(2.555e-05,)] [eta: 0:32:05, time (data): 0.019 (0.003)] l_pix: 1.1529e-01 
+2025-08-20 10:18:01,951 INFO: [SRCNN..][epoch:  8, iter:  18,000, lr:(2.555e-05,)] [eta: 0:31:31, time (data): 0.018 (0.005)] l_pix: 1.1512e-01 
+2025-08-20 10:18:11,476 INFO: [SRCNN..][epoch:  8, iter:  18,500, lr:(2.555e-05,)] [eta: 0:30:52, time (data): 0.018 (0.004)] l_pix: 1.1231e-01 
+2025-08-20 10:18:21,007 INFO: [SRCNN..][epoch:  8, iter:  19,000, lr:(2.555e-05,)] [eta: 0:30:14, time (data): 0.019 (0.004)] l_pix: 1.1749e-01 
+2025-08-20 10:18:30,583 INFO: [SRCNN..][epoch:  8, iter:  19,500, lr:(2.555e-05,)] [eta: 0:29:37, time (data): 0.020 (0.003)] l_pix: 1.1460e-01 
+2025-08-20 10:18:43,249 INFO: [SRCNN..][epoch:  9, iter:  20,000, lr:(2.555e-05,)] [eta: 0:29:10, time (data): 0.019 (0.004)] l_pix: 1.1243e-01 
+2025-08-20 10:18:43,250 INFO: Saving models and training states.
+2025-08-20 10:23:17,019 INFO: Validation climate_val
+	 # psnr: 32.0242	Best: 32.0242 @ 20000 iter
+	 # ssim: 0.9022	Best: 0.9022 @ 20000 iter
+	 # mae: 0.0999	Best: 0.0999 @ 20000 iter
+	 # mse: 0.0233	Best: 0.0233 @ 20000 iter
+	 # acc: 0.9405	Best: 0.9405 @ 20000 iter
+	 # psd: 0.0730	Best: 0.0730 @ 20000 iter
+
+2025-08-20 10:23:26,825 INFO: [SRCNN..][epoch:  9, iter:  20,500, lr:(2.044e-05,)] [eta: 0:40:18, time (data): 0.019 (0.004)] l_pix: 1.1488e-01 
+2025-08-20 10:23:36,065 INFO: [SRCNN..][epoch:  9, iter:  21,000, lr:(2.044e-05,)] [eta: 0:39:21, time (data): 0.019 (0.003)] l_pix: 1.1516e-01 
+2025-08-20 10:23:45,655 INFO: [SRCNN..][epoch:  9, iter:  21,500, lr:(2.044e-05,)] [eta: 0:38:27, time (data): 0.019 (0.004)] l_pix: 1.1164e-01 
+2025-08-20 10:23:58,150 INFO: [SRCNN..][epoch: 10, iter:  22,000, lr:(2.044e-05,)] [eta: 0:37:42, time (data): 0.052 (0.036)] l_pix: 1.1407e-01 
+2025-08-20 10:24:07,748 INFO: [SRCNN..][epoch: 10, iter:  22,500, lr:(2.044e-05,)] [eta: 0:36:51, time (data): 0.019 (0.003)] l_pix: 1.1468e-01 
+2025-08-20 10:24:17,493 INFO: [SRCNN..][epoch: 10, iter:  23,000, lr:(2.044e-05,)] [eta: 0:36:03, time (data): 0.019 (0.003)] l_pix: 1.1758e-01 
+2025-08-20 10:24:27,239 INFO: [SRCNN..][epoch: 10, iter:  23,500, lr:(2.044e-05,)] [eta: 0:35:16, time (data): 0.020 (0.004)] l_pix: 1.1446e-01 
+2025-08-20 10:24:36,788 INFO: [SRCNN..][epoch: 10, iter:  24,000, lr:(2.044e-05,)] [eta: 0:34:31, time (data): 0.020 (0.004)] l_pix: 1.1362e-01 
+2025-08-20 10:24:49,239 INFO: [SRCNN..][epoch: 11, iter:  24,500, lr:(2.044e-05,)] [eta: 0:33:53, time (data): 0.019 (0.004)] l_pix: 1.1323e-01 
+2025-08-20 10:24:58,674 INFO: [SRCNN..][epoch: 11, iter:  25,000, lr:(2.044e-05,)] [eta: 0:33:10, time (data): 0.019 (0.003)] l_pix: 1.1312e-01 
+2025-08-20 10:25:08,313 INFO: [SRCNN..][epoch: 11, iter:  25,500, lr:(2.044e-05,)] [eta: 0:32:28, time (data): 0.019 (0.003)] l_pix: 1.1182e-01 
+2025-08-20 10:25:17,890 INFO: [SRCNN..][epoch: 11, iter:  26,000, lr:(2.044e-05,)] [eta: 0:31:48, time (data): 0.019 (0.004)] l_pix: 1.1568e-01 
+2025-08-20 10:25:30,273 INFO: [SRCNN..][epoch: 12, iter:  26,500, lr:(2.044e-05,)] [eta: 0:31:14, time (data): 0.019 (0.003)] l_pix: 1.1625e-01 
+2025-08-20 10:25:39,887 INFO: [SRCNN..][epoch: 12, iter:  27,000, lr:(2.044e-05,)] [eta: 0:30:36, time (data): 0.019 (0.003)] l_pix: 1.1403e-01 
+2025-08-20 10:25:49,397 INFO: [SRCNN..][epoch: 12, iter:  27,500, lr:(2.044e-05,)] [eta: 0:29:59, time (data): 0.020 (0.004)] l_pix: 1.1539e-01 
+2025-08-20 10:25:58,932 INFO: [SRCNN..][epoch: 12, iter:  28,000, lr:(2.044e-05,)] [eta: 0:29:22, time (data): 0.019 (0.003)] l_pix: 1.1382e-01 
+2025-08-20 10:26:11,417 INFO: [SRCNN..][epoch: 13, iter:  28,500, lr:(2.044e-05,)] [eta: 0:28:52, time (data): 0.038 (0.022)] l_pix: 1.1270e-01 
+2025-08-20 10:26:21,066 INFO: [SRCNN..][epoch: 13, iter:  29,000, lr:(2.044e-05,)] [eta: 0:28:18, time (data): 0.020 (0.004)] l_pix: 1.1432e-01 
+2025-08-20 10:26:30,714 INFO: [SRCNN..][epoch: 13, iter:  29,500, lr:(2.044e-05,)] [eta: 0:27:44, time (data): 0.019 (0.004)] l_pix: 1.1243e-01 
+2025-08-20 10:26:40,461 INFO: [SRCNN..][epoch: 13, iter:  30,000, lr:(2.044e-05,)] [eta: 0:27:11, time (data): 0.020 (0.004)] l_pix: 1.1151e-01 
+2025-08-20 10:26:40,462 INFO: Saving models and training states.
+2025-08-20 10:31:11,380 INFO: Validation climate_val
+	 # psnr: 32.1088	Best: 32.1088 @ 30000 iter
+	 # ssim: 0.9034	Best: 0.9034 @ 30000 iter
+	 # mae: 0.0990	Best: 0.0990 @ 30000 iter
+	 # mse: 0.0228	Best: 0.0228 @ 30000 iter
+	 # acc: 0.9414	Best: 0.9414 @ 30000 iter
+	 # psd: 0.0726	Best: 0.0726 @ 30000 iter
+
+2025-08-20 10:31:21,018 INFO: [SRCNN..][epoch: 13, iter:  30,500, lr:(2.044e-05,)] [eta: 0:32:58, time (data): 0.021 (0.004)] l_pix: 1.1252e-01 
+2025-08-20 10:31:38,934 INFO: [SRCNN..][epoch: 14, iter:  31,000, lr:(2.044e-05,)] [eta: 0:32:27, time (data): 0.031 (0.008)] l_pix: 1.1527e-01 
+2025-08-20 10:31:53,933 INFO: [SRCNN..][epoch: 14, iter:  31,500, lr:(2.044e-05,)] [eta: 0:31:53, time (data): 0.030 (0.008)] l_pix: 1.1303e-01 
+2025-08-20 10:32:09,156 INFO: [SRCNN..][epoch: 14, iter:  32,000, lr:(2.044e-05,)] [eta: 0:31:20, time (data): 0.031 (0.009)] l_pix: 1.1235e-01 
+2025-08-20 10:32:23,898 INFO: [SRCNN..][epoch: 14, iter:  32,500, lr:(2.044e-05,)] [eta: 0:30:47, time (data): 0.029 (0.007)] l_pix: 1.1205e-01 
+2025-08-20 10:32:42,270 INFO: [SRCNN..][epoch: 15, iter:  33,000, lr:(2.044e-05,)] [eta: 0:30:19, time (data): 0.030 (0.008)] l_pix: 1.1192e-01 
+2025-08-20 10:32:57,183 INFO: [SRCNN..][epoch: 15, iter:  33,500, lr:(2.044e-05,)] [eta: 0:29:47, time (data): 0.028 (0.007)] l_pix: 1.1403e-01 
+2025-08-20 10:33:11,743 INFO: [SRCNN..][epoch: 15, iter:  34,000, lr:(2.044e-05,)] [eta: 0:29:15, time (data): 0.031 (0.009)] l_pix: 1.1274e-01 
+2025-08-20 10:33:26,661 INFO: [SRCNN..][epoch: 15, iter:  34,500, lr:(2.044e-05,)] [eta: 0:28:44, time (data): 0.028 (0.007)] l_pix: 1.1500e-01 
+2025-08-20 10:33:42,303 INFO: [SRCNN..][epoch: 15, iter:  35,000, lr:(2.044e-05,)] [eta: 0:28:15, time (data): 0.032 (0.008)] l_pix: 1.1249e-01 
+2025-08-20 10:33:59,576 INFO: [SRCNN..][epoch: 16, iter:  35,500, lr:(2.044e-05,)] [eta: 0:27:47, time (data): 0.030 (0.008)] l_pix: 1.1324e-01 
+2025-08-20 10:34:12,300 INFO: [SRCNN..][epoch: 16, iter:  36,000, lr:(2.044e-05,)] [eta: 0:27:15, time (data): 0.028 (0.008)] l_pix: 1.1109e-01 
+2025-08-20 10:34:25,061 INFO: [SRCNN..][epoch: 16, iter:  36,500, lr:(2.044e-05,)] [eta: 0:26:44, time (data): 0.024 (0.005)] l_pix: 1.1305e-01 
+2025-08-20 10:34:38,710 INFO: [SRCNN..][epoch: 16, iter:  37,000, lr:(2.044e-05,)] [eta: 0:26:14, time (data): 0.028 (0.007)] l_pix: 1.1198e-01 
+2025-08-20 10:34:56,744 INFO: [SRCNN..][epoch: 17, iter:  37,500, lr:(2.044e-05,)] [eta: 0:25:48, time (data): 0.030 (0.008)] l_pix: 1.0864e-01 
+2025-08-20 10:35:11,282 INFO: [SRCNN..][epoch: 17, iter:  38,000, lr:(2.044e-05,)] [eta: 0:25:20, time (data): 0.030 (0.008)] l_pix: 1.1214e-01 
+2025-08-20 10:35:25,176 INFO: [SRCNN..][epoch: 17, iter:  38,500, lr:(2.044e-05,)] [eta: 0:24:51, time (data): 0.023 (0.005)] l_pix: 1.1030e-01 
+2025-08-20 10:35:38,607 INFO: [SRCNN..][epoch: 17, iter:  39,000, lr:(2.044e-05,)] [eta: 0:24:22, time (data): 0.031 (0.009)] l_pix: 1.1407e-01 
+2025-08-20 10:35:52,119 INFO: End of training. Time consumed: 0:28:25
+2025-08-20 10:35:52,120 INFO: Save the latest model.
+2025-08-20 10:41:57,687 INFO: Validation climate_val
+	 # psnr: 32.1795	Best: 32.1795 @ 39438 iter
+	 # ssim: 0.9042	Best: 0.9042 @ 39438 iter
+	 # mae: 0.0982	Best: 0.0982 @ 39438 iter
+	 # mse: 0.0224	Best: 0.0224 @ 39438 iter
+	 # acc: 0.9421	Best: 0.9421 @ 39438 iter
+	 # psd: 0.0715	Best: 0.0715 @ 39438 iter
+

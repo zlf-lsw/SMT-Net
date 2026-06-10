@@ -17,30 +17,55 @@ This project implements spatial downscaling of climate data from low resolution 
 2、Directory Structure
 
 ├── archs/                      # Network architecture definitions
+
 │   ├── climate_swinir_arch.py  # SwinIR climate architecture
+
 │   ├── climate_vmamba_arch.py  # VMamba climate architecture
+
 │   ├── climate_vmamba_hybrid_arch.py  # SwinIR+VMamba hybrid architecture
+
 │   ├── climate_unet_arch.py    # UNet architecture
+
 │   ├── climate_uformer_arch.py # Uformer architecture
+
 │   ├── climate_srcnn_arch.py   # SRCNN architecture
+
 │   ├── climate_rcan_arch.py    # RCAN architecture
+
 │   └── utils.py                # Common utilities (HGTNet, etc.)
+
 ├── data/                       # Dataset definitions
+
 │   ├── climate_dataset.py      # Climate dataset loader
+
 │   ├── transforms.py           # Data augmentation
+
 │   └── merge_dataset.py        # Dataset merging utility
+
 ├── models/                     # Model definitions
+
 │   ├── simple_climate_model.py # Simple climate model
+
 │   ├── climatesr_model.py      # Climate super-resolution model
+
 │   └── climateswinir_model.py  # SwinIR climate model
+
 ├── metrics/                    # Evaluation metrics
+
 │   ├── calculate_climate_mae_mse.py    # MAE/MSE calculation
+
 │   ├── calculate_climate_psnr_ssim.py  # PSNR/SSIM calculation
+
 │   └── calculate_climate_advanced.py   # Advanced metrics (ACC, PSD, etc.)
+
 ├── paper_options/              # Configuration files
+
 ├── experiments/                # Experiment output directory
+
 ├── tools/                      # Visualization tools
+
 ├── train.py                    # Training script
+
 └── test.py                     # Testing script
 
 3、Environment Setup
@@ -58,9 +83,13 @@ The dataset is in `.pt` format (PyTorch tensor files), containing the following 
 - `HR_topo`: Topographic data, shape `[2, 64, 64]` (elevation and slope)
 
 dataset/
+
 ├── dict_s2s_train.pt    # Training set
+
 ├── dict_s2s_val.pt      # Validation set
+
 └── dict_s2s_test.pt     # Test set
+
 
 5、Training
 ### Single GPU Training

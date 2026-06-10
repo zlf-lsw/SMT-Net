@@ -1,0 +1,47 @@
+graph LR
+  subgraph "输入数据"
+    A1["ERA5再分析数据<br/>2011–2023；变量：u10 / v10 / t2m"]
+    A2["地形数据<br/>DEM / LSM"]
+    A3["样本构建<br/>逐小时3通道 或 日聚合72通道"]
+    A4["空间尺度<br/>LR: 1.0° → 15×15/16×16<br/>HR: 0.25° → 60×60/64×64"]
+  end
+
+  subgraph "数据划分"
+    B1["训练期：2011–2020"]
+    B2["验证期：2021"]
+    B3["测试期：2022–2023"]
+  end
+
+  subgraph "模型与训练"
+    C1["条件输入：低分辨率气象场 + 地形条件(HGT)"]
+    C2["主干：SwinIR + VMamba 混合<br/>FiLM地形调制 + 低分地形拼接"]
+    C3["备选架构：SRCNN / UNet / Uformer / SwinIR-HGT"]
+    C4["训练：Charbonnier/L1 损失；AMP+DDP 加速"]
+    C5["输出：偏差订正与下采样后的高分辨率场"]
+  end
+
+  subgraph "评估指标"
+    D1["MAE / MSE / RMSE"]
+    D2["PSNR / SSIM"]
+    D3["ACC (tiles)"]
+    D4["PSD (log)"]
+    D5["Bias / KGE / Gradient-MSE"]
+  end
+
+  A1 --> C1
+  A2 --> C1
+  A3 --> C1
+  A4 --> C1
+
+  B1 --> C2
+  B2 --> C2
+  B3 --> C2
+
+  C1 --> C2 --> C4 --> C5
+  C2 --> C3
+
+  C5 --> D1
+  C5 --> D2
+  C5 --> D3
+  C5 --> D4
+  C5 --> D5

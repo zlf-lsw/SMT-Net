@@ -1,0 +1,95 @@
+graph LR
+  %% SwinIR-VMamba-HGT Innovation Architecture (PPT-ready via export)
+
+  subgraph "输入"
+    LR_INPUT["LR气象场\n[B, 72, 16, 16]\n24h x 3: u10/v10/t2m"]
+    TOPO_HR["HR地形 DEM/LSM\n[B, 2, 64, 64]"]
+  end
+
+  subgraph "创新1 地形感知FiLM (HGTNet)"
+    PS1["Conv + PixelUnshuffle -> [8,32,32]"]
+    PS2["Conv + PixelUnshuffle -> [32,16,16]"]
+    PS3["Conv -> [96,16,16]"]
+    GAMMA["gamma: Sigmoid(1x1) -> [96,16,16]"]
+    BETA["beta: 1x1 -> [96,16,16]"]
+    PS1 --> PS2 --> PS3 --> GAMMA
+    PS3 --> BETA
+  end
+
+  subgraph "SwinIR 主干"
+    SWIN0["浅层Conv 72->96\n[96,16,16]"]
+    RSTB1["RSTB-1 (W-MSA/SW-MSA) x6"]
+    RSTB2["RSTB-2 x6"]
+    RSTB3["RSTB-3 x6"]
+    RSTB4["RSTB-4 x6"]
+    SWIN0 --> RSTB1 --> RSTB2 --> RSTB3 --> RSTB4
+  end
+
+  subgraph "创新2 VMamba 长程依赖"
+    SCAN["四方向扫描\nRow/Col/Diag/Anti"]
+    SSM["Selective SSM (O(N))"]
+    VMFUSE["方向融合 -> [96,16,16]"]
+    SCAN --> SSM --> VMFUSE
+  end
+
+  subgraph "创新3 自适应融合"
+    ATT["A = Softmax(Conv([F_swin,F_vm]))"]
+    FUSED["F_fused = A*F_swin + (1-A)*F_vm"]
+    ATT --> FUSED
+  end
+
+  subgraph "上采样重建"
+    UP1["PixelShuffle x2 -> [*,32,32]"]
+    UP2["PixelShuffle x2 -> [*,64,64]"]
+    OUTCONV["Conv3x3 -> [3,64,64]"]
+    UP1 --> UP2 --> OUTCONV
+  end
+
+  HR_PRED["输出: HR预测\n[B, 3, 64, 64]"]
+
+  %% 地形下采样与拼接
+  TOPO_LR["地形下采样\nBilinear -> [2,16,16]"]
+  CONCAT["Concat(LR, Topo_LR)\n-> [74,16,16]"]
+
+  %% 数据流连接
+  LR_INPUT --> SWIN0
+  TOPO_HR --> PS1
+  TOPO_HR --> TOPO_LR --> CONCAT --> SWIN0
+
+  %% VMamba 输入来自浅层特征
+  SWIN0 --> SCAN
+
+  %% FiLM 调制到各层输出
+  GAMMA -.-> RSTB1
+  BETA  -.-> RSTB1
+  GAMMA -.-> RSTB2
+  BETA  -.-> RSTB2
+  GAMMA -.-> RSTB3
+  BETA  -.-> RSTB3
+  GAMMA -.-> RSTB4
+  BETA  -.-> RSTB4
+
+  %% 分支融合与输出
+  RSTB4 --> ATT
+  VMFUSE --> ATT
+  FUSED --> UP1 --> OUTCONV --> HR_PRED
+
+  %% 样式 (可删)
+  classDef input fill:#e3f2fd,stroke:#1565c0,stroke-width:2px,color:#000
+  classDef hgt fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px,color:#000
+  classDef swin fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px,color:#000
+  classDef vmamba fill:#fff3e0,stroke:#ef6c00,stroke-width:2px,color:#000
+  classDef fuse fill:#e0f2f1,stroke:#00695c,stroke-width:2px,color:#000
+  classDef up fill:#ffebee,stroke:#c62828,stroke-width:2px,color:#000
+
+  class LR_INPUT,TOPO_HR,TOPO_LR,CONCAT input
+  class PS1,PS2,PS3,GAMMA,BETA hgt
+  class SWIN0,RSTB1,RSTB2,RSTB3,RSTB4 swin
+  class SCAN,SSM,VMFUSE vmamba
+  class ATT,FUSED fuse
+  class UP1,UP2,OUTCONV,HR_PRED up
+
+
+
+
+

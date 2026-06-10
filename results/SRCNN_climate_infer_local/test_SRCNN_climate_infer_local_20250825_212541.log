@@ -1,0 +1,224 @@
+2025-08-25 21:25:41,968 INFO: 
+                ____                _       _____  ____
+               / __ ) ____ _ _____ (_)_____/ ___/ / __ \
+              / __  |/ __ `// ___// // ___/\__ \ / /_/ /
+             / /_/ // /_/ /(__  )/ // /__ ___/ // _, _/
+            /_____/ \__,_//____//_/ \___//____//_/ |_|
+     ______                   __   __                 __      __
+    / ____/____   ____   ____/ /  / /   __  __ _____ / /__   / /
+   / / __ / __ \ / __ \ / __  /  / /   / / / // ___// //_/  / /
+  / /_/ // /_/ // /_/ // /_/ /  / /___/ /_/ // /__ / /<    /_/
+  \____/ \____/ \____/ \____/  /_____/\____/ \___//_/|_|  (_)
+    
+Version Information: 
+	BasicSR: 1.4.2
+	PyTorch: 1.12.1+cu116
+	TorchVision: 0.13.1+cu116
+2025-08-25 21:25:41,968 INFO: 
+  name: SRCNN_climate_infer_local
+  model_type: SimpleClimateModel
+  scale: 4
+  num_gpu: 1
+  manual_seed: 0
+  fp16: False
+  datasets:[
+    train:[
+      name: dummy_train
+      type: ClimateDataset
+      phase: train
+      dataroot_gt: /home/lyb/diffusion/main2 copy/dataset
+      normalize: True
+      input_channels: 3
+      input_channel_indices: [0, 1, 2]
+      use_topo: False
+      use_shuffle: False
+      num_worker_per_gpu: 0
+      batch_size_per_gpu: 8
+      prefetch_mode: None
+      scale: 4
+    ]
+    val:[
+      name: climate_test
+      type: ClimateDataset
+      phase: val
+      force_split: test
+      dataroot_gt: /home/lyb/diffusion/main2 copy/dataset
+      normalize: True
+      input_channels: 3
+      input_channel_indices: [0, 1, 2]
+      use_topo: False
+      batch_size_per_gpu: 292
+      num_worker_per_gpu: 1
+      scale: 4
+    ]
+  ]
+  network_g:[
+    type: SRCNNClimate
+    upscale: 4
+    num_in_ch: 3
+    num_out_ch: 1
+    feat1: 64
+    feat2: 32
+    activation: none
+  ]
+  path:[
+    pretrain_network_g: experiments/SRCNN_climate_baseline_7to1_64x64/models/net_g_latest.pth
+    strict_load_g: True
+    resume_state: None
+    results_root: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/results/SRCNN_climate_infer_local
+    log: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/results/SRCNN_climate_infer_local
+    visualization: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/results/SRCNN_climate_infer_local/visualization
+  ]
+  train:[
+    total_iter: 1
+    optim_g:[
+      type: Adam
+      lr: 1e-06
+    ]
+    pixel_opt:[
+      type: L1Loss
+      loss_weight: 1.0
+      reduction: mean
+    ]
+    scheduler:[
+      type: MultiStepLR
+      milestones: [1]
+      gamma: 1.0
+    ]
+    warmup_iter: -1
+  ]
+  val:[
+    val_freq: 1
+    save_img: True
+    pbar: True
+    metrics:[
+      psnr:[
+        type: calculate_psnr
+        crop_border: 0
+        test_y_channel: False
+        better: higher
+      ]
+      ssim:[
+        type: calculate_ssim
+        crop_border: 0
+        test_y_channel: False
+        better: higher
+      ]
+      mae:[
+        type: calculate_climate_mae
+        crop_border: 0
+        better: lower
+      ]
+      mse:[
+        type: calculate_climate_mse
+        crop_border: 0
+        better: lower
+      ]
+      acc:[
+        type: calculate_climate_acc_tiles
+        crop_border: 0
+        better: higher
+      ]
+      psd:[
+        type: calculate_climate_psd_log
+        crop_border: 0
+        better: lower
+      ]
+    ]
+  ]
+  logger:[
+    print_freq: 10
+    save_checkpoint_freq: 999999
+    use_tb_logger: False
+    wandb:[
+    ]
+  ]
+  dist_params:[
+    backend: nccl
+    port: 29500
+  ]
+  dist: False
+  rank: 0
+  world_size: 1
+  auto_resume: False
+  is_train: False
+
+2025-08-25 21:25:41,969 INFO: Loading dataset: /home/lyb/diffusion/main2 copy/dataset/dict_s2s_test.pt
+2025-08-25 21:25:44,348 INFO: Unified LR shape [N,C,H,W]: (17520, 3, 16, 16)
+2025-08-25 21:25:44,348 INFO: Unified HR shape [N,1,H,W]: (17520, 1, 64, 64)
+2025-08-25 21:25:44,583 INFO: LR mean: tensor([-0.3405,  0.0028,  0.7138])
+2025-08-25 21:25:44,584 INFO: LR std: tensor([1.1236, 0.9439, 0.3251])
+2025-08-25 21:25:44,585 INFO: HR mean: -0.3771260380744934
+2025-08-25 21:25:44,586 INFO: HR std: 1.1070611476898193
+2025-08-25 21:25:44,942 INFO: Dataset [ClimateDataset] - climate_test is built.
+2025-08-25 21:25:44,943 INFO: Number of test images in climate_test: 17520
+2025-08-25 21:25:44,946 INFO: Network [SRCNNClimate] is created.
+2025-08-25 21:25:48,240 INFO: Network: SRCNNClimate, with parameters: 18,497
+2025-08-25 21:25:48,241 INFO: SRCNNClimate(
+  (conv1): Conv2d(3, 64, kernel_size=(9, 9), stride=(1, 1), padding=(4, 4))
+  (relu1): ReLU(inplace=True)
+  (conv2): Conv2d(64, 32, kernel_size=(1, 1), stride=(1, 1))
+  (relu2): ReLU(inplace=True)
+  (conv3): Conv2d(32, 1, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2))
+  (act): Activation()
+)
+2025-08-25 21:25:48,242 INFO: Loading SRCNNClimate model from experiments/SRCNN_climate_baseline_7to1_64x64/models/net_g_latest.pth, with param key: [params].
+2025-08-25 21:25:48,244 INFO: Enable amp training: False
+2025-08-25 21:25:48,244 INFO: Model [SimpleClimateModel] is created.
+2025-08-25 21:25:48,245 INFO: Testing climate_test...
+2025-08-25 21:27:49,321 INFO: === 中间指标 (2920/17520 样本) ===
+2025-08-25 21:27:49,322 INFO: psnr: 32.584076
+2025-08-25 21:27:49,323 INFO: ssim: 0.908988
+2025-08-25 21:27:49,323 INFO: mae: 0.093401
+2025-08-25 21:27:49,323 INFO: mse: 0.020284
+2025-08-25 21:27:49,324 INFO: acc: 0.944085
+2025-08-25 21:27:49,324 INFO: psd: 0.064189
+2025-08-25 21:27:49,324 INFO: ==================================================
+2025-08-25 21:29:49,904 INFO: === 中间指标 (5840/17520 样本) ===
+2025-08-25 21:29:49,905 INFO: psnr: 32.131594
+2025-08-25 21:29:49,905 INFO: ssim: 0.908227
+2025-08-25 21:29:49,906 INFO: mae: 0.097546
+2025-08-25 21:29:49,906 INFO: mse: 0.022869
+2025-08-25 21:29:49,906 INFO: acc: 0.943269
+2025-08-25 21:29:49,907 INFO: psd: 0.069653
+2025-08-25 21:29:49,907 INFO: ==================================================
+2025-08-25 21:31:52,300 INFO: === 中间指标 (8760/17520 样本) ===
+2025-08-25 21:31:52,300 INFO: psnr: 32.229327
+2025-08-25 21:31:52,301 INFO: ssim: 0.909215
+2025-08-25 21:31:52,301 INFO: mae: 0.097016
+2025-08-25 21:31:52,301 INFO: mse: 0.022305
+2025-08-25 21:31:52,301 INFO: acc: 0.943756
+2025-08-25 21:31:52,301 INFO: psd: 0.068723
+2025-08-25 21:31:52,302 INFO: ==================================================
+2025-08-25 21:33:23,538 INFO: === 中间指标 (11680/17520 样本) ===
+2025-08-25 21:33:23,538 INFO: psnr: 32.235444
+2025-08-25 21:33:23,538 INFO: ssim: 0.907247
+2025-08-25 21:33:23,539 INFO: mae: 0.097209
+2025-08-25 21:33:23,539 INFO: mse: 0.022296
+2025-08-25 21:33:23,539 INFO: acc: 0.943794
+2025-08-25 21:33:23,539 INFO: psd: 0.069851
+2025-08-25 21:33:23,540 INFO: ==================================================
+2025-08-25 21:36:08,602 INFO: === 中间指标 (14600/17520 样本) ===
+2025-08-25 21:36:08,603 INFO: psnr: 32.042322
+2025-08-25 21:36:08,604 INFO: ssim: 0.906799
+2025-08-25 21:36:08,604 INFO: mae: 0.099183
+2025-08-25 21:36:08,604 INFO: mse: 0.023376
+2025-08-25 21:36:08,605 INFO: acc: 0.943964
+2025-08-25 21:36:08,605 INFO: psd: 0.075789
+2025-08-25 21:36:08,605 INFO: ==================================================
+2025-08-25 21:39:03,081 INFO: === 中间指标 (17520/17520 样本) ===
+2025-08-25 21:39:03,082 INFO: psnr: 32.122320
+2025-08-25 21:39:03,083 INFO: ssim: 0.907288
+2025-08-25 21:39:03,083 INFO: mae: 0.098399
+2025-08-25 21:39:03,083 INFO: mse: 0.022913
+2025-08-25 21:39:03,084 INFO: acc: 0.944489
+2025-08-25 21:39:03,084 INFO: psd: 0.074452
+2025-08-25 21:39:03,084 INFO: ==================================================
+2025-08-25 21:39:03,086 INFO: Validation climate_test
+	 # psnr: 32.1223	Best: 32.1223 @ 0 iter
+	 # ssim: 0.9073	Best: 0.9073 @ 0 iter
+	 # mae: 0.0984	Best: 0.0984 @ 0 iter
+	 # mse: 0.0229	Best: 0.0229 @ 0 iter
+	 # acc: 0.9445	Best: 0.9445 @ 0 iter
+	 # psd: 0.0745	Best: 0.0745 @ 0 iter
+

@@ -1,0 +1,353 @@
+2025-08-25 21:33:40,197 INFO: 
+                ____                _       _____  ____
+               / __ ) ____ _ _____ (_)_____/ ___/ / __ \
+              / __  |/ __ `// ___// // ___/\__ \ / /_/ /
+             / /_/ // /_/ /(__  )/ // /__ ___/ // _, _/
+            /_____/ \__,_//____//_/ \___//____//_/ |_|
+     ______                   __   __                 __      __
+    / ____/____   ____   ____/ /  / /   __  __ _____ / /__   / /
+   / / __ / __ \ / __ \ / __  /  / /   / / / // ___// //_/  / /
+  / /_/ // /_/ // /_/ // /_/ /  / /___/ /_/ // /__ / /<    /_/
+  \____/ \____/ \____/ \____/  /_____/\____/ \___//_/|_|  (_)
+    
+Version Information: 
+	BasicSR: 1.4.2
+	PyTorch: 1.12.1+cu116
+	TorchVision: 0.13.1+cu116
+2025-08-25 21:33:40,198 INFO: 
+  name: UNet_climate_infer_local
+  model_type: SimpleClimateModel
+  scale: 4
+  num_gpu: 1
+  manual_seed: 0
+  fp16: False
+  datasets:[
+    train:[
+      name: dummy_train
+      type: ClimateDataset
+      phase: train
+      dataroot_gt: /home/lyb/diffusion/main2 copy/dataset
+      normalize: True
+      input_channels: 3
+      input_channel_indices: [0, 1, 2]
+      target_channel_index: 0
+      use_topo: False
+      use_shuffle: False
+      num_worker_per_gpu: 0
+      batch_size_per_gpu: 8
+      prefetch_mode: None
+      scale: 4
+    ]
+    val:[
+      name: climate_test
+      type: ClimateDataset
+      phase: val
+      force_split: test
+      dataroot_gt: /home/lyb/diffusion/main2 copy/dataset
+      normalize: True
+      input_channels: 3
+      input_channel_indices: [0, 1, 2]
+      target_channel_index: 0
+      use_topo: False
+      batch_size_per_gpu: 292
+      num_worker_per_gpu: 1
+      scale: 4
+    ]
+  ]
+  network_g:[
+    type: UNet
+    add_hgt: False
+    upscale: 4
+    num_in_ch: 3
+    num_out_ch: 1
+    activation: none
+  ]
+  path:[
+    pretrain_network_g: experiments/UNet_climate_baseline_7to1_64x64/models/net_g_latest.pth
+    strict_load_g: True
+    resume_state: None
+    results_root: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/results/UNet_climate_infer_local
+    log: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/results/UNet_climate_infer_local
+    visualization: /home/lyb/diffusion/main2 copy/TransfomerDownscaling-main/results/UNet_climate_infer_local/visualization
+  ]
+  train:[
+    total_iter: 1
+    optim_g:[
+      type: Adam
+      lr: 1e-06
+    ]
+    pixel_opt:[
+      type: L1Loss
+      loss_weight: 1.0
+      reduction: mean
+    ]
+    scheduler:[
+      type: MultiStepLR
+      milestones: [1]
+      gamma: 1.0
+    ]
+    warmup_iter: -1
+  ]
+  val:[
+    val_freq: 1
+    save_img: True
+    pbar: True
+    metrics:[
+      psnr:[
+        type: calculate_psnr
+        crop_border: 0
+        test_y_channel: False
+        better: higher
+      ]
+      ssim:[
+        type: calculate_ssim
+        crop_border: 0
+        test_y_channel: False
+        better: higher
+      ]
+      mae:[
+        type: calculate_climate_mae
+        crop_border: 0
+        better: lower
+      ]
+      mse:[
+        type: calculate_climate_mse
+        crop_border: 0
+        better: lower
+      ]
+      acc:[
+        type: calculate_climate_acc_tiles
+        crop_border: 0
+        better: higher
+      ]
+      psd:[
+        type: calculate_climate_psd_log
+        crop_border: 0
+        better: lower
+      ]
+    ]
+  ]
+  logger:[
+    print_freq: 10
+    save_checkpoint_freq: 999999
+    use_tb_logger: False
+    wandb:[
+    ]
+  ]
+  dist_params:[
+    backend: nccl
+    port: 29500
+  ]
+  dist: False
+  rank: 0
+  world_size: 1
+  auto_resume: False
+  is_train: False
+
+2025-08-25 21:33:40,199 INFO: Loading dataset: /home/lyb/diffusion/main2 copy/dataset/dict_s2s_test.pt
+2025-08-25 21:33:42,449 INFO: Unified LR shape [N,C,H,W]: (17520, 3, 16, 16)
+2025-08-25 21:33:42,459 INFO: Unified HR shape [N,1,H,W]: (17520, 1, 64, 64)
+2025-08-25 21:33:42,881 INFO: LR mean: tensor([-0.3405,  0.0028,  0.7138])
+2025-08-25 21:33:42,881 INFO: LR std: tensor([1.1236, 0.9439, 0.3251])
+2025-08-25 21:33:42,882 INFO: HR mean: -0.3771260380744934
+2025-08-25 21:33:42,882 INFO: HR std: 1.1070611476898193
+2025-08-25 21:33:43,325 INFO: Dataset [ClimateDataset] - climate_test is built.
+2025-08-25 21:33:43,326 INFO: Number of test images in climate_test: 17520
+2025-08-25 21:33:43,865 INFO: Network [UNet] is created.
+2025-08-25 21:33:47,158 INFO: Network: UNet, with parameters: 31,370,497
+2025-08-25 21:33:47,159 INFO: UNet(
+  (inc): DoubleConv(
+    (double_conv): Sequential(
+      (0): Conv2d(3, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (2): ReLU(inplace=True)
+      (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+      (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (5): ReLU(inplace=True)
+    )
+  )
+  (down1): Down(
+    (maxpool_conv): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (double_conv): Sequential(
+          (0): Conv2d(64, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down2): Down(
+    (maxpool_conv): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (double_conv): Sequential(
+          (0): Conv2d(128, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down3): Down(
+    (maxpool_conv): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (double_conv): Sequential(
+          (0): Conv2d(256, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (down4): Down(
+    (maxpool_conv): Sequential(
+      (0): MaxPool2d(kernel_size=2, stride=2, padding=0, dilation=1, ceil_mode=False)
+      (1): DoubleConv(
+        (double_conv): Sequential(
+          (0): Conv2d(512, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (1): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (2): ReLU(inplace=True)
+          (3): Conv2d(1024, 1024, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+          (4): BatchNorm2d(1024, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+          (5): ReLU(inplace=True)
+        )
+      )
+    )
+  )
+  (up1): Up(
+    (up): ConvTranspose2d(1024, 512, kernel_size=(2, 2), stride=(2, 2))
+    (conv): DoubleConv(
+      (double_conv): Sequential(
+        (0): Conv2d(1024, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(512, 512, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(512, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up2): Up(
+    (up): ConvTranspose2d(512, 256, kernel_size=(2, 2), stride=(2, 2))
+    (conv): DoubleConv(
+      (double_conv): Sequential(
+        (0): Conv2d(512, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(256, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(256, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up3): Up(
+    (up): ConvTranspose2d(256, 128, kernel_size=(2, 2), stride=(2, 2))
+    (conv): DoubleConv(
+      (double_conv): Sequential(
+        (0): Conv2d(256, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(128, 128, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(128, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (up4): Up(
+    (up): ConvTranspose2d(128, 64, kernel_size=(2, 2), stride=(2, 2))
+    (conv): DoubleConv(
+      (double_conv): Sequential(
+        (0): Conv2d(128, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (1): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (2): ReLU(inplace=True)
+        (3): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (4): BatchNorm2d(64, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (5): ReLU(inplace=True)
+      )
+    )
+  )
+  (conv_before_upsample): Sequential(
+    (0): Conv2d(64, 64, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): LeakyReLU(negative_slope=0.01, inplace=True)
+  )
+  (upsample): Upsample(
+    (0): Conv2d(64, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (1): PixelShuffle(upscale_factor=2)
+    (2): Conv2d(64, 256, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+    (3): PixelShuffle(upscale_factor=2)
+  )
+  (conv_last): Conv2d(64, 1, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1))
+  (act): Activation()
+)
+2025-08-25 21:33:47,297 INFO: Loading UNet model from experiments/UNet_climate_baseline_7to1_64x64/models/net_g_latest.pth, with param key: [params].
+2025-08-25 21:33:47,470 INFO: Enable amp training: False
+2025-08-25 21:33:47,556 INFO: Model [SimpleClimateModel] is created.
+2025-08-25 21:33:47,558 INFO: Testing climate_test...
+2025-08-25 21:37:30,834 INFO: === 中间指标 (2920/17520 样本) ===
+2025-08-25 21:37:30,834 INFO: psnr: 33.018291
+2025-08-25 21:37:30,834 INFO: ssim: 0.910903
+2025-08-25 21:37:30,835 INFO: mae: 0.089267
+2025-08-25 21:37:30,835 INFO: mse: 0.018314
+2025-08-25 21:37:30,835 INFO: acc: 0.945756
+2025-08-25 21:37:30,835 INFO: psd: 0.059077
+2025-08-25 21:37:30,835 INFO: ==================================================
+2025-08-25 21:40:14,660 INFO: === 中间指标 (5840/17520 样本) ===
+2025-08-25 21:40:14,660 INFO: psnr: 32.618896
+2025-08-25 21:40:14,662 INFO: ssim: 0.910940
+2025-08-25 21:40:14,662 INFO: mae: 0.092881
+2025-08-25 21:40:14,662 INFO: mse: 0.020383
+2025-08-25 21:40:14,662 INFO: acc: 0.945028
+2025-08-25 21:40:14,663 INFO: psd: 0.063172
+2025-08-25 21:40:14,663 INFO: ==================================================
+2025-08-25 21:42:34,470 INFO: === 中间指标 (8760/17520 样本) ===
+2025-08-25 21:42:34,470 INFO: psnr: 32.687692
+2025-08-25 21:42:34,470 INFO: ssim: 0.912353
+2025-08-25 21:42:34,471 INFO: mae: 0.092375
+2025-08-25 21:42:34,471 INFO: mse: 0.019987
+2025-08-25 21:42:34,471 INFO: acc: 0.945644
+2025-08-25 21:42:34,471 INFO: psd: 0.062090
+2025-08-25 21:42:34,471 INFO: ==================================================
+2025-08-25 21:45:17,374 INFO: === 中间指标 (11680/17520 样本) ===
+2025-08-25 21:45:17,375 INFO: psnr: 32.710164
+2025-08-25 21:45:17,375 INFO: ssim: 0.910749
+2025-08-25 21:45:17,376 INFO: mae: 0.092322
+2025-08-25 21:45:17,376 INFO: mse: 0.019883
+2025-08-25 21:45:17,376 INFO: acc: 0.946013
+2025-08-25 21:45:17,376 INFO: psd: 0.062920
+2025-08-25 21:45:17,376 INFO: ==================================================
+2025-08-25 21:50:40,082 INFO: === 中间指标 (14600/17520 样本) ===
+2025-08-25 21:50:40,084 INFO: psnr: 32.520107
+2025-08-25 21:50:40,084 INFO: ssim: 0.910026
+2025-08-25 21:50:40,084 INFO: mae: 0.094291
+2025-08-25 21:50:40,085 INFO: mse: 0.020844
+2025-08-25 21:50:40,085 INFO: acc: 0.946002
+2025-08-25 21:50:40,085 INFO: psd: 0.067102
+2025-08-25 21:50:40,086 INFO: ==================================================
+2025-08-25 22:01:55,273 INFO: === 中间指标 (17520/17520 样本) ===
+2025-08-25 22:01:55,275 INFO: psnr: 32.577168
+2025-08-25 22:01:55,275 INFO: ssim: 0.910180
+2025-08-25 22:01:55,275 INFO: mae: 0.093776
+2025-08-25 22:01:55,276 INFO: mse: 0.020539
+2025-08-25 22:01:55,276 INFO: acc: 0.946285
+2025-08-25 22:01:55,277 INFO: psd: 0.066318
+2025-08-25 22:01:55,277 INFO: ==================================================
+2025-08-25 22:01:55,280 INFO: Validation climate_test
+	 # psnr: 32.5772	Best: 32.5772 @ 0 iter
+	 # ssim: 0.9102	Best: 0.9102 @ 0 iter
+	 # mae: 0.0938	Best: 0.0938 @ 0 iter
+	 # mse: 0.0205	Best: 0.0205 @ 0 iter
+	 # acc: 0.9463	Best: 0.9463 @ 0 iter
+	 # psd: 0.0663	Best: 0.0663 @ 0 iter
+

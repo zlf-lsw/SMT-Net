@@ -1,0 +1,139 @@
+# SwinIR + VMamba 混合架构配置文件（含地形HGT增强）
+# 该配置文件用于训练结合了Swin Transformer和Vision Mamba的气候数据降尺度模型
+name: SwinIR_VMamba_hgt_7to1_64x64
+model_type: SimpleClimateModel
+scale: 4  # 上采样倍数，从16x16到64x64
+num_gpu: 2  # 使用2块GPU进行并行训练
+manual_seed: 0  # 随机种子，确保实验可重复
+fp16: true  # 启用半精度训练以节省显存
+auto_resume: true  # 自动恢复中断的训练
+
+# 数据集配置
+datasets:
+  train:
+    name: climate_train
+    type: ClimateDatasetWithTopo  # 支持地形数据的气候数据集
+    phase: train
+    dataroot_gt: "/home/lyb/diffusion/main2 copy/dataset"  # 数据集根目录
+    normalize: true  # 数据归一化
+    input_channels: 3  # 输入通道数（温度、u风、v风）
+    input_channel_indices: [0, 1, 2]  # 使用的通道索引
+    use_topo: false  # 是否使用地形数据作为额外输入
+    use_shuffle: true  # 数据加载时是否随机打乱
+    num_worker_per_gpu: 4  # 每个GPU的数据加载进程数
+    batch_size_per_gpu: 20  # 每个GPU的批次大小
+    prefetch_mode: ~  # 预取模式，~表示None
+    pin_memory: true  # 将数据加载到固定内存，加速GPU传输
+    persistent_workers: false  # 不使用持久化工作进程
+  val:
+    name: climate_val
+    type: ClimateDatasetWithTopo
+    phase: val
+    dataroot_gt: "/home/lyb/diffusion/main2 copy/dataset"
+    normalize: true
+    input_channels: 3  # 输入通道数（温度、u风、v风）
+    input_channel_indices: [0, 1, 2]
+    use_topo: false
+    num_worker_per_gpu: 4
+    prefetch_mode: ~
+    pin_memory: true
+    persistent_workers: false
+
+# 网络生成器配置
+network_g:
+  type: SwinIRVMambaClimate  # 混合SwinIR和VMamba的气候模型
+  add_hgt: true  # 启用高度场（HGT）增强
+  hgt_alpha_init: 0.01  # HGT初始权重系数
+  
+  # 基础网络参数
+  img_size: 16  # 输入图像尺寸（低分辨率）
+  patch_size: 1  # 补丁大小
+  in_chans: 3  # 输入通道数
+  num_out_ch: 1  # 输出通道数（温度）
+  embed_dim: 96  # 嵌入维度
+  depths: [6, 6, 6, 6]  # 每个阶段的层数
+  num_heads: [6, 6, 6, 6]  # 每个阶段的注意力头数
+  window_size: [4, 4, 4, 4]  # 窗口大小
+  mlp_ratio: 4  # MLP扩展比例
+  
+  # Transformer相关参数
+  qkv_bias: true  # 查询、键、值投影是否使用偏置
+  drop_rate: 0.0  # 全连接层dropout率
+  attn_drop_rate: 0.0  # 注意力dropout率
+  drop_path_rate: 0.05  # 随机深度dropout率
+  patch_norm: true  # 补丁嵌入后是否标准化
+  use_checkpoint: false  # 是否使用梯度检查点节省显存
+  
+  # 上采样相关参数
+  upscale: 4  # 上采样倍数
+  img_range: 1.0  # 图像数值范围
+  upsampler: pixelshuffle  # 上采样方法：像素重排
+  resi_connection: 1conv  # 残差连接类型
+  activation: none  # 激活函数类型
+  
+  # VMamba相关超参数
+  vmamba_depth: 2  # VMamba层深度
+  vmamba_d_state: 16  # 状态维度
+  vmamba_expand: 2  # 扩展倍数
+  vmamba_drop_path: 0.05  # VMamba的随机深度dropout率
+  vmamba_directions: 4  # 扫描方向数
+
+# 模型路径配置
+path:
+  pretrain_network_g: ~  # 预训练模型路径，~表示None
+  strict_load_g: true  # 严格加载模型权重
+  resume_state: ~  # 恢复训练状态路径
+
+# 训练配置
+train:
+  find_unused_parameters: true  # 查找未使用的参数（分布式训练需要）
+  
+  # 优化器配置
+  optim_g:
+    type: Adam  # 优化器类型
+    lr: !!float 2e-4  # 学习率
+    betas: [0.9, 0.99]  # Adam的beta参数
+    weight_decay: !!float 1e-6  # 权重衰减
+  
+  # 学习率调度器
+  scheduler:
+    type: MultiStepLR  # 多步学习率调度
+    milestones: [5000, 10000, 15000, 20000]  # 学习率衰减的迭代点
+    gamma: 0.8  # 衰减倍数
+  
+  total_iter: 73060  # 总训练迭代数
+  warmup_iter: 5000  # 预热迭代数
+  
+  # 损失函数配置
+  pixel_opt:
+    type: CharbonnierLoss  # Charbonnier损失（对异常值鲁棒的L1损失变体）
+    loss_weight: 1.0  # 损失权重
+    reduction: mean  # 损失聚合方式
+    eps: !!float 1e-3  # 平滑参数
+
+# 验证配置
+val:
+  val_freq: 20000  # 验证频率（每20000次迭代验证一次）
+  save_img: false  # 是否保存验证图像
+  pbar: true  # 显示进度条
+  
+  # 评估指标
+  metrics:
+    psnr: {type: calculate_psnr, crop_border: 0, test_y_channel: false, better: higher}  # 峰值信噪比
+    ssim: {type: calculate_ssim, crop_border: 0, test_y_channel: false, better: higher}  # 结构相似性
+    mae:  {type: calculate_climate_mae,  crop_border: 0, better: lower}  # 平均绝对误差
+    mse:  {type: calculate_climate_mse,  crop_border: 0, better: lower}  # 均方误差
+    acc:  {type: calculate_climate_acc_tiles,  crop_border: 0, better: higher}  # 瓦片准确率
+    psd:  {type: calculate_climate_psd_log,    crop_border: 0, better: lower}  # 功率谱密度
+
+# 日志配置
+logger:
+  print_freq: 2000  # 打印频率（每2000次迭代打印一次）
+  save_checkpoint_freq: 20000  # 保存检查点频率
+  use_tb_logger: false  # 不使用TensorBoard日志
+
+# 分布式训练参数
+dist_params:
+  backend: nccl  # 分布式后端（NVIDIA Collective Communications Library）
+  port: 29502  # 通信端口
+

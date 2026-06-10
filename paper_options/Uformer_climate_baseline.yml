@@ -1,0 +1,119 @@
+# Uformer基线训练配置 - 适配main2/dataset数据集
+name: Uformer_climate_baseline_7to1_64x64
+model_type: SimpleClimateModel
+scale: 4
+num_gpu: 2
+manual_seed: 0
+fp16: true
+
+datasets:
+  train:
+    name: climate_train
+    type: ClimateDataset
+    phase: train
+    dataroot_gt: "/home/lyb/diffusion/main2 copy/dataset"
+    normalize: true
+    input_channels: 3
+    input_channel_indices: [0, 1, 2]
+    use_topo: false
+    use_shuffle: true
+    num_worker_per_gpu: 1
+    batch_size_per_gpu: 20
+    prefetch_mode: ~
+  val:
+    name: climate_val
+    type: ClimateDataset
+    phase: val
+    dataroot_gt: "/home/lyb/diffusion/main2 copy/dataset"
+    normalize: true
+    input_channels: 3
+    input_channel_indices: [0, 1, 2]
+    use_topo: false
+
+network_g:
+  type: ClimateUformer
+  add_hgt: false          # 关闭地形分支，公平对比
+  num_in_ch: 3
+  num_out_ch: 1
+  upscale: 4
+  img_size: 16            # 与低分辨率16x16匹配
+  embed_dim: 128
+  depths: [2, 2, 2, 2, 2]
+  num_heads: [4, 8, 16, 16, 8]
+  window_size: 4          # win_size<=每层特征图尺寸（最小4x4）
+  mlp_ratio: 4
+  qkv_bias: true
+  drop_rate: 0.0
+  attn_drop_rate: 0.0
+  drop_path_rate: 0.1
+  patch_norm: true
+  use_checkpoint: false
+  token_projection: linear
+  token_mlp: leff
+  activation: none
+
+path:
+  pretrain_network_g: ~
+  strict_load_g: true
+  resume_state: ~
+
+train:
+  optim_g:
+    type: Adam
+    lr: !!float 5e-5
+    betas: [0.9, 0.99]
+    weight_decay: !!float 1e-6
+  scheduler:
+    type: MultiStepLR
+    milestones: [5000, 10000, 15000, 20000]
+    gamma: 0.8
+  total_iter: 73060
+  warmup_iter: 500
+  pixel_opt:
+    type: CharbonnierLoss
+    loss_weight: 1.0
+    reduction: mean
+    eps: !!float 1e-3
+
+val:
+  val_freq: 10000
+  save_img: false
+  pbar: true
+  metrics:
+    psnr:
+      type: calculate_psnr
+      crop_border: 0
+      test_y_channel: false
+      better: higher
+    ssim:
+      type: calculate_ssim
+      crop_border: 0
+      test_y_channel: false
+      better: higher
+    mae:
+      type: calculate_climate_mae
+      crop_border: 0
+      better: lower
+    mse:
+      type: calculate_climate_mse
+      crop_border: 0
+      better: lower
+    acc:
+      type: calculate_climate_acc_tiles
+      crop_border: 0
+      better: higher
+    psd:
+      type: calculate_climate_psd_log
+      crop_border: 0
+      better: lower
+
+logger:
+  print_freq: 500
+  save_checkpoint_freq: 10000
+  use_tb_logger: true
+  # 关闭 wandb，避免网络问题影响训练；需要时改为你的项目名
+  wandb: {}
+
+dist_params:
+  backend: nccl
+  port: 29500

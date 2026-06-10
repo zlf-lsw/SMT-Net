@@ -1,0 +1,95 @@
+# SwinIR-HGT 推理/测试配置 - 使用本地测试集（dict_s2s_test.pt）
+name: SwinIR_climate_infer_hgt_local
+model_type: SimpleClimateModel
+scale: 4
+num_gpu: 1
+manual_seed: 0
+fp16: false
+
+datasets:
+  train:  # 极简train用于满足BasicSR内部引用
+    name: dummy_train
+    type: ClimateDatasetWithTopo
+    phase: train
+    dataroot_gt: "/home/lyb/diffusion/main2 copy/dataset"
+    normalize: true
+    input_channels: 3
+    input_channel_indices: [0, 1, 2]
+    use_topo: false
+    use_shuffle: false
+    num_worker_per_gpu: 0
+    batch_size_per_gpu: 8
+    prefetch_mode: ~
+
+  val:
+    name: climate_test
+    type: ClimateDatasetWithTopo
+    phase: val
+    force_split: test
+    dataroot_gt: "/home/lyb/diffusion/main2 copy/dataset"
+    normalize: true
+    input_channels: 3
+    input_channel_indices: [0, 1, 2]
+    use_topo: false
+    batch_size_per_gpu: 292
+    num_worker_per_gpu: 1
+
+network_g:
+  type: SwinIRClimate
+  add_hgt: true
+  hgt_alpha_init: 0.01
+  img_size: 16
+  patch_size: 1
+  in_chans: 3
+  num_out_ch: 1
+  embed_dim: 96
+  depths: [6, 6, 6, 6]
+  num_heads: [6, 6, 6, 6]
+  window_size: [4, 4, 4, 4]
+  mlp_ratio: 4
+  qkv_bias: true
+  drop_rate: 0.0
+  attn_drop_rate: 0.0
+  drop_path_rate: 0.05
+  patch_norm: true
+  use_checkpoint: false
+  upscale: 4
+  img_range: 1.0
+  upsampler: pixelshuffle
+  resi_connection: 1conv
+  activation: none
+
+path:
+  pretrain_network_g: experiments/SwinIR_VMamba_hgt_7to1_64x64/models/net_g_latest.pth
+  strict_load_g: true
+  resume_state: ~
+
+train:
+  total_iter: 1
+  optim_g: {type: Adam, lr: !!float 1e-6}
+  pixel_opt: {type: L1Loss, loss_weight: 1.0, reduction: mean}
+  scheduler: {type: MultiStepLR, milestones: [1], gamma: 1.0}
+  warmup_iter: -1
+
+val:
+  val_freq: 1
+  save_img: true
+  pbar: true
+  metrics:
+    psnr: {type: calculate_psnr, crop_border: 0, test_y_channel: False, better: higher}
+    ssim: {type: calculate_ssim, crop_border: 0, test_y_channel: False, better: higher}
+    mae:  {type: calculate_climate_mae,  crop_border: 0, better: lower}
+    mse:  {type: calculate_climate_mse,  crop_border: 0, better: lower}
+    acc:  {type: calculate_climate_acc_tiles,  crop_border: 0, better: higher}
+    psd:  {type: calculate_climate_psd_log,  crop_border: 0, better: lower}
+
+logger:
+  print_freq: 10  # 每10批打印一次（约6次）
+  save_checkpoint_freq: 999999
+  use_tb_logger: false
+  wandb: {}
+
+dist_params:
+  backend: nccl
+  port: 29500
+

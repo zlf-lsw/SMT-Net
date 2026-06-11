@@ -1,7 +1,7 @@
 # SMT-Net  Climate Data Spatial Downscaling Framework
 A deep learning framework for climate data spatial downscaling based on Transformer and Mamba architectures, supporting multiple state-of-the-art image super-resolution architectures.
 
-1、Overview
+**1、Overview**
 This project implements spatial downscaling of climate data from low resolution (16×16) to high resolution (64×64), with a scale factor of 4x. The framework is built upon [BasicSR](https://github.com/XPixelGroup/BasicSR) and supports various deep learning architectures for fine-grained prediction of climate variables.
 
 | Model | Description | Config File |
@@ -14,7 +14,7 @@ This project implements spatial downscaling of climate data from low resolution 
 | **UNet** | Classic U-Net convolutional neural network | `UNet_climate_baseline.yml` |
 | **SRCNN** | Simple super-resolution CNN | `SRCNN_climate_baseline.yml` |
 
-2、Directory Structure
+**2、Directory Structure**
 
 ├── archs/                      # Network architecture definitions
 
@@ -68,7 +68,7 @@ This project implements spatial downscaling of climate data from low resolution 
 
 └── test.py                     # Testing script
 
-3、Environment Setup
+**3、Environment Setup**
 conda create -n climate_ds python=3.9
 conda activate climate_ds
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
@@ -76,7 +76,7 @@ pip install basicsr
 pip install numpy scipy matplotlib opencv-python einops timm
 pip install mamba-ssm
 
-4、Dataset Preparation
+**4、Dataset Preparation**
 The dataset is in `.pt` format (PyTorch tensor files), containing the following keys:
 - `LR_input`: Low-resolution input, shape `[C, T, 16, 16]` (C=channels, T=time steps)
 - `HR_target`: High-resolution target, shape `[C, T, 64, 64]`
@@ -91,9 +91,28 @@ dataset/
 └── dict_s2s_test.pt     # Test set
 The complete dataset and source code are publicly available on Google Drive. You can download them via the link below:https://drive.google.com/drive/folders/1fR7UiKloJSjSU-1P92LTmNVfr4p8Kodd?usp=drive_link
 
-5、Training
+**5、Training**
 ### Single GPU Training
+# SwinIR + VMamba + HGT 
 python train.py -opt paper_options/SwinIR_VMamba_hgt.yml
+
+# SwinIR + VMamba 
+python train.py -opt paper_options/SwinIR_VMamba.yml
+
+# SwinIR + HGT 
+python train.py -opt paper_options/SwinIR_climate_baseline_hgt.yml
+
+# SwinIR 
+python train.py -opt paper_options/SwinIR_climate_baseline.yml
+
+# Uformer
+python train.py -opt paper_options/Uformer_climate_baseline.yml
+
+# UNet
+python train.py -opt paper_options/UNet_climate_baseline.yml
+
+# SRCNN
+python train.py -opt paper_options/SRCNN_climate_baseline.yml
 
 ### Multi-GPU Distributed Training
 CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch \
@@ -102,9 +121,29 @@ CUDA_VISIBLE_DEVICES=0,1 python -m torch.distributed.launch \
     train.py -opt paper_options/SwinIR_VMamba_hgt.yml --launcher pytorch
     
 **Run Testing**
+# SwinIR + VMamba + HGT
 python test.py -opt paper_options/SwinIR_VMamba_hgt_infer.yml
 
-6、Experiment Results
+# SwinIR + VMamba
+python test.py -opt paper_options/SwinIR_VMamba_infer.yml
+
+# SwinIR + HGT
+python test.py -opt paper_options/SwinIR_climate_infer_hgt.yml
+
+# SwinIR
+python test.py -opt paper_options/SwinIR_climate_infer.yml
+
+# Uformer
+python test.py -opt paper_options/Uformer_climate_infer.yml
+
+# UNet
+python test.py -opt paper_options/UNet_climate_infer.yml
+
+# SRCNN
+python test.py -opt paper_options/SRCNN_climate_infer.yml
+```
+
+**6、Experiment Results**
 
 Training results are saved in the `experiments/` directory:
 

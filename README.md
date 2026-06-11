@@ -89,7 +89,7 @@ dataset/
 ├── dict_s2s_val.pt      # Validation set
 
 └── dict_s2s_test.pt     # Test set
-
+The complete dataset and source code are publicly available on Google Drive. You can download them via the link below:https://drive.google.com/drive/folders/1fR7UiKloJSjSU-1P92LTmNVfr4p8Kodd?usp=drive_link
 
 5、Training
 ### Single GPU Training
